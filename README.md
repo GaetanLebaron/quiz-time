@@ -53,6 +53,14 @@ Les thèmes et les noms de niveaux se modifient en haut du même fichier. Une er
 
 Les parties sont conservées dans le navigateur de la TV (les 10 dernières). Utilise le même navigateur, hors navigation privée. Si une question est retirée de `questions.json`, une partie enregistrée qui l'utilisait reprend avec une autre question.
 
+## Si le téléphone reste sur « Écran TV : en recherche »
+
+L'écran d'attente affiche le **code de l'écran** (4 derniers caractères) sur la TV comme sur le téléphone, et l'état des envois.
+
+- **Codes différents :** le téléphone a mémorisé un autre écran. Touche « Scanner le QR code d'un autre écran », puis scanne le QR code de la TV.
+- **« service saturé (429) » :** le service gratuit ntfy.sh limite le nombre de requêtes par connexion Internet (TV et téléphone sur le même Wi-Fi comptent ensemble). Ferme les pages Quiz Time inutiles, patiente 2 minutes, puis touche « Relancer ». Les commandes du Maître du Jeu sont réessayées automatiquement, et la reconnexion se fait avec une attente croissante pour ne pas aggraver la saturation.
+- **Aucune erreur, mais pas de réponse :** vérifie que la page de la TV est ouverte et active (certaines TV mettent les onglets en veille).
+
 ## Échange de messages
 
 La TV et le téléphone s'envoient leurs messages via le service public ntfy.sh, sans compte. Les noms d'équipes, questions et scores passent par ce service, protégés par un code aléatoire contenu dans le QR code. Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy.

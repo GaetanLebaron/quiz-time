@@ -17,10 +17,12 @@ const rawDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 const okId=s=>/^[a-z0-9]{6,40}$/i.test(s||'');
 const P=new URLSearchParams(location.search);
 let JOIN=null;
-if(P.has('tv')){rawDel('qt-join');try{history.replaceState(null,'',location.pathname)}catch(e){}}
+const SCAN=P.has('forget');   /* ?forget : le téléphone oublie l'écran mémorisé et attend un nouveau scan */
+if(SCAN)rawDel('qt-join');
+else if(P.has('tv')){rawDel('qt-join');try{history.replaceState(null,'',location.pathname)}catch(e){}}
 else if(okId(P.get('join'))){JOIN=P.get('join');rawSet('qt-join',JOIN)}
 else if(okId(rawGet('qt-join')))JOIN=rawGet('qt-join');
-const TV=!JOIN;
+const TV=!JOIN&&!SCAN;
 document.body.classList.toggle('tv',TV);
 
 /* ---------- État ---------- */
@@ -112,13 +114,35 @@ const gsum=()=>(lsGet(GK)||[]).map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,ro
 /* ---------- Transport : messages via ntfy.sh ---------- */
 const T=TV?(()=>{let id=rawGet('qt-id2');if(!okId(id)){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');rawSet('qt-id2',id)}return id})():JOIN;
 const OUT=BASE+T+(TV?'s':'c'),IN=BASE+T+(TV?'c':'s');
-const say=m=>{fetch(OUT,{method:'POST',body:JSON.stringify(m)}).catch(()=>{})};
-function listen(h,onState){
-  const es=new EventSource(IN+'/sse');
-  es.onopen=()=>onState(true);es.onerror=()=>onState(false);
-  es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event&&d.event!='message')return;h(JSON.parse(d.message))}catch(x){}};
+/* État de la liaison, affiché à l'écran pour comprendre un blocage. 429 = le service gratuit limite le nombre de requêtes. */
+const net={fail:'',got:0,ok:0};
+const codeTag=()=>'…'+String(T).slice(-4);
+const refreshNet=()=>{if(TV?scr=='wait':scr=='conn')render()};
+function say(m,tries=0){
+  fetch(OUT,{method:'POST',body:JSON.stringify(m)}).then(r=>{
+    /* 429 : message non délivré. On ne réessaie que les commandes du téléphone (un état de la TV est remplacé par le suivant). */
+    if(r&&r.status==429){net.fail='429';refreshNet();if(m.t&&tries<4)setTimeout(()=>say(m,tries+1),5500);return}
+    if(r&&r.ok===false)net.fail='HTTP '+r.status;else{net.fail='';net.ok++}refreshNet();
+  }).catch(()=>{net.fail='réseau';refreshNet()});
 }
-const push=ask=>{say({k:'s',scr,s:pub(),ask:ask===true});if(scr=='cfgd')say({k:'g',g:gsum().slice(0,6)})};
+/* Écoute des messages. Reconnexion avec attente croissante (5 s, 10 s… 60 s) pour ne pas saturer le service, et reprise après le dernier message reçu. */
+function listen(h,onState){
+  let es=null,delay=0,lastId='',lastTime=0;const seen=new Set();
+  const open=()=>{
+    es=new EventSource(IN+'/sse'+(lastId?'?since='+encodeURIComponent(lastId):''));
+    es.onopen=()=>{delay=0;onState(true)};
+    es.onerror=()=>{onState(false);try{es.close()}catch(e){}delay=Math.min(60000,delay?delay*2:5000);setTimeout(open,delay)};
+    es.onmessage=e=>{try{
+      const d=JSON.parse(e.data);
+      if(d.event&&d.event!='message')return;
+      if(d.id){if(seen.has(d.id))return;seen.add(d.id);if(seen.size>100)seen.delete(seen.values().next().value);lastId=d.id}
+      if(d.time){if(lastTime&&d.time<lastTime-1)return;lastTime=Math.max(lastTime,d.time)}   /* ignore un éventuel rejeu d'anciens messages */
+      net.got++;h(JSON.parse(d.message));
+    }catch(x){}};
+  };
+  open();
+}
+const push=ask=>say({k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined});
 function tvInit(){
   joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+T;
   listen(m=>{conn=true;if(m.t=='hello'&&!S)scr='cfgd';onCmd(m)},ok=>{tvOk=ok;render()});
@@ -126,8 +150,7 @@ function tvInit(){
 }
 function ctlInit(){
   listen(d=>{
-    if(d.k=='s'){cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.ask)say({t:'hello'})}
-    else if(d.k=='g')gl=d.g||[];
+    if(d.k=='s'){cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;if(d.ask)say({t:'hello'})}
     render();
   },ok=>{pOk=ok;if(ok)say({t:'hello'});render()});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)say({t:'hello'})});
@@ -211,13 +234,21 @@ function endHTML(s,ctl){
   return `<div class="end"><p class="sub">${w.length>1?'Égalité entre':'Victoire de'}</p><div class="win">🏆 ${esc(w.join(' & '))}</div>
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
+const netHTML=()=>`<p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc(net.fail=='429'?'service saturé (429), nouvel essai en cours':net.fail):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`;
+function connHelp(){
+  const sat=net.fail=='429';
+  const titre=sat?'Service de messages saturé':"Pas de réponse de l'écran TV";
+  const texte=sat?'Le service gratuit limite le nombre de requêtes. Fermez les autres pages Quiz Time, patientez 2 minutes, puis touchez Relancer.'
+    :"Vérifiez que la page de la TV est ouverte et qu'elle affiche le même code d'écran ("+codeTag()+"). Sinon, scannez à nouveau son QR code.";
+  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="say({t:'hello'})">Relancer</button>`;
+}
 const qrURL=(n)=>{try{const q=qrcode(0,'M');q.addData(joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
 const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:16px"><img alt="QR code" style="width:110px;border-radius:8px;background:#fff;padding:6px" src="${qrURL(6)}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.</span></div>`;
 function tvWait(){
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
   const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>'
-    :'<p class="st sub">En attente du Maître du Jeu…</p>'+`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`;
+    :'<p class="st sub">En attente du Maître du Jeu…</p>'+`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`+netHTML();
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}${err?`<p class="st" style="color:var(--pink)">${esc(err)}</p>`:''}<p class="url">${esc(joinUrl)}</p></div>`;
 }
@@ -251,7 +282,7 @@ function render(){
     a.innerHTML=scr=='game'&&s&&s.q?lostBar()+tvGame(s):scr=='end'&&s?endHTML(s,false):tvWait();
     teamOverlay();
   }
-  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?`<p class="sub">Pas de réponse de l'écran TV. Vérifiez que sa page est ouverte, puis touchez Relancer.</p><button class="btn" onclick="say({t:'hello'})">Relancer</button>`:''}<p class="foot sub"><a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
+  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${netHTML()}${Date.now()-t0>12000?connHelp():''}<p class="foot sub"><a href="?forget">Scanner le QR code d'un autre écran</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
   else if(scr=='cfgd'||!st)a.innerHTML=renderSetup();
   else a.innerHTML=scr=='end'?endHTML(st,true):(st.q?ctlGame(st):renderSetup());
   tick();
@@ -263,6 +294,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake(
 
 /* ---------- Démarrage : chargement des questions ---------- */
 async function boot(){
+  if(SCAN){$('#app').innerHTML=`<div class="card"><h3>Scanner l'écran TV</h3><p>Ce téléphone a oublié l'ancien écran. Ouvrez l'appareil photo et scannez le QR code affiché sur la TV : l'application s'ouvrira déjà connectée.</p></div>`;return}
   try{
     const r=await fetch('questions.json',{cache:'no-cache'});
     if(!r.ok)throw new Error('HTTP '+r.status);
