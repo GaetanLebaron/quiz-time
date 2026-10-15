@@ -31,7 +31,7 @@ let cfg=Object.assign({teams:['Équipe 1','Équipe 2'],rounds:5,level:2,timerOn:
 if(!Array.isArray(cfg.teams)||cfg.teams.length<2)cfg.teams=['Équipe 1','Équipe 2'];
 cfg.teams=cfg.teams.slice(0,8).map(t=>String(t).slice(0,24));
 const saveCfg=()=>lsSet('qt-cfg',cfg);
-let S=null,st=null,scr=TV?'wait':'conn',conn=false,joinUrl='',err='';
+let S=null,st=null,scr=TV?'wait':'conn',conn=false,joinUrl='';
 let tvOk=false,pOk=false,cOk=false,gl=[],recvAt=0,lastKey=null;
 const t0=Date.now();
 const GK='quiz-time-games',CK='quiz-time-cur';
@@ -74,10 +74,10 @@ function startGame(c){
 function next(){
   S.ti++;if(S.ti>=S.teams.length){S.ti=0;S.round++}
   if(S.round>=S.rounds){scr='end';return}
-  S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.phase='q';armTimer(true);
+  S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.pick=null;S.phase='q';armTimer(true);
 }
 const pub=()=>S&&{teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,th:S.themes[S.round],
-  q:S.q?{q:S.q.q,a:S.q.a,l:S.q.l,f:S.q.f}:null,phase:S.phase,opts:S.opts,hid:S.hid,pts:S.pts,tt:S.tt||0,tl:tlNow(),
+  q:S.q?{q:S.q.q,a:S.q.a,l:S.q.l,f:S.q.f}:null,phase:S.phase,opts:S.opts,hid:S.hid,pts:S.pts,pick:S.pick,tt:S.tt||0,tl:tlNow(),
   last:S.round==S.rounds-1&&S.ti==S.teams.length-1};
 
 function onCmd(m){
@@ -88,7 +88,10 @@ function onCmd(m){
   else if(m.t=='del'){lsSet(GK,(lsGet(GK)||[]).filter(g=>g.id!=m.p))}
   else if(S&&m.t=='show'&&S.phase=='q'){S.opts=mkOpts(S.q);S.phase='m'}
   else if(S&&m.t=='fifty'&&S.phase=='m'){S.hid=shuf(S.opts.filter(o=>o!=S.q.a)).slice(0,2);S.phase='f'}
-  else if(S&&m.t=='ans'&&S.phase!='r'&&[0,1,3,5].includes(m.p)){S.teams[S.ti].s+=m.p;S.pts=m.p;S.phase='r'}
+  else if(S&&m.t=='ans'&&S.phase=='q'&&[0,5].includes(m.p)){S.teams[S.ti].s+=m.p;S.pts=m.p;S.pick=null;S.phase='r'}
+  /* Réponse choisie parmi les propositions (c) ou aucune réponse (c null) : la TV calcule les points. */
+  else if(S&&m.t=='ans'&&(S.phase=='m'||S.phase=='f')&&(m.c==null||(S.opts.includes(m.c)&&!S.hid.includes(m.c)))){
+    const p=m.c==S.q.a?(S.phase=='m'?3:1):0;S.teams[S.ti].s+=p;S.pts=p;S.pick=m.c==null?null:m.c;S.phase='r'}
   else if(S&&m.t=='next'&&S.phase=='r')next();
   saveS();push();render();
 }
@@ -261,7 +264,7 @@ function tvInit(){
   H=m=>{
     conn=true;if(m.t=='hello'&&!S)scr='cfgd';
     /* Offre de liaison directe du téléphone : la TV répond en joignant son état (un seul message ntfy.sh). */
-    if(m.o&&RTC_OK)rtcAnswer(m.o).then(a=>{saveS();push(false,{a,rid:m.rid});render()},()=>{rtc.st='impossible, relais ntfy.sh';onCmd(m)});
+    if(m.t=='hello'&&m.o&&RTC_OK)rtcAnswer(m.o).then(a=>{saveS();push(false,{a,rid:m.rid});render()},()=>{rtc.st='impossible, relais ntfy.sh';onCmd(m)});
     else onCmd(m);
   };
   listen(ok=>{tvOk=ok;render()});
@@ -357,9 +360,18 @@ function head(s){
   return `<div class="bar" style="margin-bottom:16px"><span>Tour ${s.round+1} / ${s.rounds}</span><span class="dots">${dots}</span></div>
   <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>`;
 }
+/* mark : montre la bonne réponse (✓) et, une fois la réponse donnée, la proposition choisie si elle est fausse (✗). */
 function optsHTML(s,mark){
-  return s.opts?`<div class="opts">${s.opts.map((o,i)=>`<div class="opt ${mark&&o==s.q.a?'ok':''} ${s.hid.includes(o)?'off':''}">${'ABCD'[i]}. ${esc(o)}${mark&&o==s.q.a?' ✓':''}</div>`).join('')}</div>`:'';
+  const bad=o=>mark&&s.phase=='r'&&s.pick==o&&o!=s.q.a;
+  return s.opts?`<div class="opts">${s.opts.map((o,i)=>`<div class="opt ${mark&&o==s.q.a?'ok':''} ${bad(o)?'bad':''} ${s.hid.includes(o)?'off':''}">${'ABCD'[i]}. ${esc(o)}${mark&&o==s.q.a?' ✓':bad(o)?' ✗':''}</div>`).join('')}</div>`:'';
 }
+/* Télécommande : le Maître du Jeu touche la proposition donnée par l'équipe, puis valide. */
+let sel=null,selKey='';
+function pickHTML(s){
+  return `<div class="opts">${s.opts.map((o,i)=>{const off=s.hid.includes(o);
+    return `<button class="opt pk ${o==s.q.a?'ok':''} ${sel==i?'sel':''} ${off?'off':''}" ${off?'disabled':''} onclick="sel=${i};render()">${'ABCD'[i]}. ${esc(o)}${o==s.q.a?' ✓':''}</button>`}).join('')}</div>`;
+}
+const answer=c=>{sel=null;say({t:'ans',c})};   /* c (choix), pas o : o est réservé à l'offre WebRTC */
 const verdict=s=>s.pts?`<div class="res good">Bonne réponse ! +${plural(s.pts,'point')}</div>`:`<div class="res bad">Mauvaise réponse · c'était : ${esc(s.q.a)}</div>`;
 function endHTML(s,ctl){
   const top=Math.max(...s.teams.map(t=>t.s)),w=s.teams.filter(t=>t.s==top).map(t=>t.n);
@@ -367,6 +379,10 @@ function endHTML(s,ctl){
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
 const netHTML=()=>`<p class="st sub" style="font-size:.85rem">${esc(lnkTxt())}</p><p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc((net.fail=='429'?'service saturé (429)':net.fail)+(net.why?' « '+net.why+' »':'')+(outQ.length?', nouvel essai en cours':'')):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture de secours : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
+/* Diagnostic replié par défaut (accordéon) pour ne pas encombrer l'écran ; ⚠ dans le titre en cas de problème d'envoi.
+   L'état ouvert/fermé est conservé d'un affichage à l'autre. */
+let diagOpen=false;
+const diagHTML=extra=>`<details class="diag" ${diagOpen?'open':''} ontoggle="diagOpen=this.open"><summary>Détails de connexion${net.fail?' ⚠':''}</summary>${extra||''}${netHTML()}</details>`;
 function connHelp(){
   const sat=net.fail=='429'||/429/.test(net.poll);
   let titre,texte;
@@ -381,10 +397,10 @@ const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:cen
 function tvWait(){
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
-  const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>'+netHTML()
-    :'<p class="st sub">En attente du Maître du Jeu…</p>'+`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`+netHTML();
+  const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>'+diagHTML()
+    :'<p class="st sub">En attente du Maître du Jeu…</p>'+diagHTML(`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`);
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
-  <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}${err?`<p class="st" style="color:var(--pink)">${esc(err)}</p>`:''}<p class="url">${esc(joinUrl)}</p></div>`;
+  <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}<p class="url">${esc(joinUrl)}</p></div>`;
 }
 function tvTop(s){
   const dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
@@ -395,18 +411,25 @@ function tvTop(s){
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
   return `${tvTop(s)}<div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div>${tmrHTML(s)}<div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>
-  <section class="card"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p><h2 class="q">${esc(q.q)}</h2>${optsHTML(s,r)}
+  <section class="card"><h2 class="q">${esc(q.q)}</h2>${optsHTML(s,r)}
   ${r?`${verdict(s)}<div class="anec"><b>Réponse : ${esc(q.a)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`:''}</section>`;
 }
 function ctlGame(s){
   const q=s.q,B=(c,t,a)=>`<button class="btn ${c} big" onclick="${a}">${t}</button>`;
   let b='';
   if(s.phase=='q')b=B('green','Bonne réponse directe (5 pts)',"cmd('ans',5)")+B('pink','Mauvaise réponse (0 pt)',"cmd('ans',0)")+B('','Afficher les 4 propositions',"cmd('show')");
-  else if(s.phase=='m')b=B('green','Bonne réponse (3 pts)',"cmd('ans',3)")+B('pink','Mauvaise réponse (0 pt)',"cmd('ans',0)")+B('','50/50',"cmd('fifty')");
-  else if(s.phase=='f')b=B('green','Bonne réponse (1 pt)',"cmd('ans',1)")+B('pink','Mauvaise réponse (0 pt)',"cmd('ans',0)");
+  else if(s.phase=='m'||s.phase=='f'){
+    const k=s.round+'-'+s.ti+'-'+s.phase;if(k!=selKey){selKey=k;sel=null}
+    if(sel!=null&&s.hid.includes(s.opts[sel]))sel=null;
+    const o=sel!=null?s.opts[sel]:null,pts=s.phase=='m'?3:1;
+    b=(o==null?'<p class="sub hint">Touchez la proposition donnée par l\'équipe, puis validez.</p>'
+      :B(o==q.a?'green':'pink',`Valider ${'ABCD'[sel]}. ${esc(o)} (${o==q.a?plural(pts,'pt'):'0 pt'})`,`answer(st.opts[${sel}])`))
+      +(s.phase=='m'?B('','50/50',"cmd('fifty')"):'')+B('mut','Pas de réponse (0 pt)','answer(null)');
+  }
   else b=`<div class="anec"><b>${s.pts?'+'+plural(s.pts,'point'):'0 point'} pour ${esc(s.teams[s.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',s.last?'Voir le classement final':'Question suivante',"cmd('next')");
+  const opts=(s.phase=='m'||s.phase=='f')?pickHTML(s):optsHTML(s,true);
   return `<div class="grid"><main>${head(s)}<section class="card"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${tmrHTML(s)}<h2 class="q">${esc(q.q)}</h2>
-  <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${optsHTML(s,true)}<div class="acts">${b}</div></section><div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...s,i0:s.ti},true)}</div>`;
+  <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${opts}<div class="acts">${b}</div></section><div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...s,i0:s.ti},true)}</div>`;
 }
 function render(){
   $('#meta').textContent='';
@@ -416,7 +439,7 @@ function render(){
     a.innerHTML=scr=='game'&&s&&s.q?lostBar()+tvGame(s):scr=='end'&&s?endHTML(s,false):tvWait();
     teamOverlay();
   }
-  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${netHTML()}${Date.now()-t0>12000?connHelp():''}<p class="foot sub"><a href="?forget">Scanner le QR code d'un autre écran</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
+  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?connHelp():''}${diagHTML()}<p class="foot sub"><a href="?forget">Scanner le QR code d'un autre écran</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
   else if(scr=='cfgd'||!st)a.innerHTML=renderSetup();
   else a.innerHTML=scr=='end'?endHTML(st,true):(st.q?ctlGame(st):renderSetup());
   tick();
