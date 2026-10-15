@@ -1,10 +1,12 @@
 """Ajoute un lot de questions (outils/lots/*.py) à questions.json, après vérification.
 Usage : python3 outils/ajouter-lot.py outils/lots/geo-1.py [--dry]
 Vérifie : champs, doublons (avec la banque existante et dans le lot), fausses propositions
-(au moins 3, distinctes de la réponse), groupes ayant au moins 4 réponses différentes."""
+(au moins 3, distinctes de la réponse), groupes ayant au moins 4 réponses différentes,
+réponses numériques pour les groupes déclarés dans ANNEES."""
 import json,sys,re,unicodedata,collections,runpy
 lot=runpy.run_path(sys.argv[1]);dry='--dry' in sys.argv
 TH,NV,Q=lot['THEME'],lot['NIVEAU'],lot['Q']
+ANNEES=lot.get('ANNEES',set())   # groupes dont la réponse est une année (fausses propositions = années proches)
 d=json.load(open('questions.json',encoding='utf-8'))
 norm=lambda t:re.sub(r'[^a-z0-9]','',unicodedata.normalize('NFD',t.lower()).encode('ascii','ignore').decode())
 seen={norm(x['question']):x['question'] for x in d['questions']}
@@ -20,15 +22,18 @@ for i,e in enumerate(Q):
     if fa is None and not g:err.append(f'#{i} ni groupe ni fausses propositions : {q}')
     x={'theme':TH,'niveau':NV};
     if g:x['groupe']=g
+    if g in ANNEES:
+        if not re.fullmatch(r'\d{3,4}',a):err.append(f'#{i} réponse qui n\'est pas une année : {q}')
     x.update(question=q,reponse=a,anecdote=f)
     if fa:x['fausses']=fa
+    if g in ANNEES:x['annee']=True
     new.append(x)
 allq=d['questions']+new
 ans=collections.defaultdict(set)
 for x in allq:
     if x.get('groupe'):ans[x['groupe']].add(x['reponse'])
 for x in new:
-    if not x.get('fausses') and len(ans[x['groupe']])<4:err.append(f"groupe « {x['groupe']} » : moins de 4 réponses différentes ({x['question']})")
+    if not x.get('fausses') and not x.get('annee') and len(ans[x['groupe']])<4:err.append(f"groupe « {x['groupe']} » : moins de 4 réponses différentes ({x['question']})")
 if err:print('\n'.join(err));sys.exit(1)
 c=collections.Counter((x['theme'],x['niveau']) for x in allq)
 print(f'{len(new)} questions ajoutées · thème {TH} niveau {NV} : {c[(TH,NV)]} · total : {len(allq)}')
