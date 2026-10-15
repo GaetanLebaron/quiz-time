@@ -1,7 +1,7 @@
 /* Quiz Time : écran TV + télécommande du Maître du Jeu.
    Les questions sont dans questions.json. Les deux appareils s'échangent leurs messages via ntfy.sh (sans compte). */
 
-const BASE='https://ntfy.sh/';
+const BASE=window.QT_BASE||'https://ntfy.sh/';   /* QT_BASE : autre serveur ntfy (tests, serveur personnel) */
 const OVL_MS=2000;   /* durée de l'animation de changement d'équipe */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -109,27 +109,55 @@ function restore(g){
 }
 const findG=id=>(lsGet(GK)||[]).find(g=>g.id==id);
 const loadS=()=>restore(findG(lsGet(CK)));
-const gsum=()=>(lsGet(GK)||[]).map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',teams:g.S.teams}));
+const gsum=()=>(lsGet(GK)||[]).filter(g=>g&&g.S&&Array.isArray(g.S.teams))   /* ignore une sauvegarde abîmée au lieu de bloquer l'envoi */
+  .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',teams:g.S.teams}));
 
 /* ---------- Transport : messages via ntfy.sh ---------- */
 const T=TV?(()=>{let id=rawGet('qt-id2');if(!okId(id)){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');rawSet('qt-id2',id)}return id})():JOIN;
 const OUT=BASE+T+(TV?'s':'c'),IN=BASE+T+(TV?'c':'s');
 /* État de la liaison, affiché à l'écran pour comprendre un blocage. 429 = le service gratuit limite le nombre de requêtes. */
-const net={fail:'',got:0,ok:0,sse:'',poll:'',polled:null};
+const net={fail:'',why:'',got:0,ok:0,sse:'',poll:'',polled:null};
 const codeTag=()=>'…'+String(T).slice(-4);
 const refreshNet=()=>{if(TV?scr=='wait':scr=='conn')render()};
-function say(m,tries=0){
+/* File d'envoi : un message à la fois, dans l'ordre. En cas d'échec (429, réseau, serveur), le même message est renvoyé
+   avec une attente croissante (5 s, 10 s… 60 s) au lieu d'être perdu. Seul le dernier état de la TV compte : un nouvel état
+   remplace celui qui attend encore. Un seul « hello » en attente à la fois. */
+const SEND_MS=window.QT_SEND_MS||5000;
+const outQ=[];let sending=false,sendT=0,sendDelay=0,lastHello=0;
+function say(m){
+  const last=outQ[outQ.length-1];
+  if(m.k=='s'&&last&&last.k=='s'&&!(sending&&outQ.length==1)){m.ask=m.ask||last.ask;outQ[outQ.length-1]=m}
+  else if(m.t=='hello'&&outQ.some((x,i)=>x.t=='hello'&&!(sending&&i==0)))return;
+  else outQ.push(m);
+  if(m.t=='hello')lastHello=Date.now();
+  if(!sending&&!sendT)flush();
+}
+function retryNow(){if(sendT){clearTimeout(sendT);sendT=0;sendDelay=0;flush()}}
+function flush(){
+  sendT=0;if(sending||!outQ.length)return;
+  sending=true;const m=outQ[0];
+  const done=(ok,fail,why)=>{
+    sending=false;
+    if(ok||fail=='drop'){outQ.shift();sendDelay=0;if(ok){net.fail='';net.why='';net.ok++}flush()}
+    else{net.fail=fail;net.why=why||'';sendDelay=Math.min(60000,sendDelay?sendDelay*2:SEND_MS);sendT=setTimeout(flush,sendDelay)}
+    refreshNet();
+  };
   fetch(OUT,{method:'POST',body:JSON.stringify(m)}).then(r=>{
-    /* 429 : message non délivré. On ne réessaie que les commandes du téléphone (un état de la TV est remplacé par le suivant). */
-    if(r&&r.status==429){net.fail='429';refreshNet();if(m.t&&tries<4)setTimeout(()=>say(m,tries+1),5500);return}
-    if(r&&r.ok===false)net.fail='HTTP '+r.status;else{net.fail='';net.ok++}refreshNet();
-  }).catch(()=>{net.fail='réseau';refreshNet()});
+    if(r.ok)return done(true);
+    /* Le service renvoie un JSON {"error":"…"} qui précise la limite atteinte. */
+    r.text().then(t=>{let w='';try{w=JSON.parse(t).error||''}catch(e){}
+      /* 4xx autre que 429 (message refusé) : inutile de réessayer. */
+      if(r.status>=400&&r.status<500&&r.status!=429){net.fail='HTTP '+r.status;net.why=w;return done(false,'drop')}
+      done(false,r.status==429?'429':'HTTP '+r.status,w);
+    },()=>done(false,r.status==429?'429':'HTTP '+r.status));
+  }).catch(()=>done(false,'réseau'));
 }
 /* Écoute des messages. Reconnexion avec attente croissante (5 s, 10 s… 60 s) pour ne pas saturer le service, et reprise après le dernier message reçu.
    Sur le téléphone (fallback), si la liaison temps réel est fermée ou si la TV ne répond pas, une lecture directe des derniers messages prend le relais. */
-const POLL_MS=window.QT_POLL_MS||10000,POLL_FIRST=window.QT_POLL_FIRST||4000;
+const POLL_MS=window.QT_POLL_MS||10000,POLL_FIRST=window.QT_POLL_FIRST||4000,HELLO_MS=window.QT_HELLO_MS||30000;
+let pollNow=()=>{};
 function listen(h,onState,fallback){
-  let es=null,delay=0,lastId='',lastTime=0,isOpen=false,helloSent=false;const seen=new Set();
+  let es=null,delay=0,lastId='',lastTime=0,isOpen=false;const seen=new Set();
   const handle=txt=>{try{
     const d=JSON.parse(txt);
     if(d.event&&d.event!='message')return;
@@ -145,16 +173,25 @@ function listen(h,onState,fallback){
   };
   open();
   if(fallback){
+    /* Lecture directe toutes les 10 s, espacée jusqu'à 60 s si le service répond 429. Tant que la TV n'a pas répondu,
+       un « hello » est renvoyé toutes les 30 s : une réponse perdue ne bloque plus la connexion. */
+    let pollT=0,pollDelay=POLL_MS,busy=false;
     const poll=()=>{
-      if(isOpen&&scr!='conn')return;   /* tout va bien */
-      if(scr=='conn'&&!helloSent){helloSent=true;say({t:'hello'})}
+      clearTimeout(pollT);pollT=setTimeout(poll,pollDelay);
+      if(busy||(isOpen&&scr!='conn'))return;   /* tout va bien */
+      if(scr=='conn'&&Date.now()-lastHello>=HELLO_MS)say({t:'hello'});
+      busy=true;
       fetch(IN+'/json?poll=1&since='+(lastId?encodeURIComponent(lastId):'5m'))
-        .then(r=>{if(!r.ok){net.poll='HTTP '+r.status;return ''}net.poll='OK';return r.text()})
-        .then(t=>{const L=String(t).split('\n').filter(Boolean);net.polled=L.length;L.forEach(handle);refreshNet()})
-        .catch(()=>{net.poll='erreur réseau';refreshNet()});
+        .then(r=>{
+          if(!r.ok){net.poll=r.status==429?'service saturé (429)':'HTTP '+r.status;pollDelay=Math.min(60000,pollDelay*2);return ''}
+          net.poll='OK';pollDelay=POLL_MS;return r.text();
+        })
+        .then(t=>{const L=String(t).split('\n').filter(Boolean);if(net.poll=='OK')net.polled=L.length;L.forEach(handle)})
+        .catch(()=>{net.poll='erreur réseau'})
+        .finally(()=>{busy=false;refreshNet()});
     };
-    setTimeout(()=>{poll();setInterval(poll,POLL_MS)},POLL_FIRST);
-    window.pollNow=()=>{helloSent=false;poll()};
+    pollT=setTimeout(poll,POLL_FIRST);
+    pollNow=()=>{pollDelay=POLL_MS;poll()};
   }
 }
 const push=ask=>say({k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined});
@@ -249,15 +286,15 @@ function endHTML(s,ctl){
   return `<div class="end"><p class="sub">${w.length>1?'Égalité entre':'Victoire de'}</p><div class="win">🏆 ${esc(w.join(' & '))}</div>
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
-const netHTML=()=>`<p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc(net.fail=='429'?'service saturé (429), nouvel essai en cours':net.fail):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture directe : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
+const netHTML=()=>`<p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc((net.fail=='429'?'service saturé (429)':net.fail)+(net.why?' « '+net.why+' »':'')+(outQ.length?', nouvel essai en cours':'')):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture directe : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
 function connHelp(){
-  const sat=net.fail=='429';
+  const sat=net.fail=='429'||/429/.test(net.poll);
   let titre,texte;
-  if(sat){titre='Service de messages saturé';texte='Le service gratuit limite le nombre de requêtes. Fermez les autres pages Quiz Time, patientez 2 minutes, puis touchez Relancer.'}
+  if(sat){titre='Service de messages saturé';texte='Le service gratuit limite le nombre de requêtes par connexion Internet, et la TV et le téléphone sur le même Wi-Fi comptent ensemble. Passez le téléphone en données mobiles (Wi-Fi coupé) ou fermez les autres pages Quiz Time et patientez 2 minutes : les messages sont renvoyés automatiquement.'}
   else if(net.poll=='OK'&&net.polled===0){titre="La TV ne publie aucun message";texte="Le service n'a rien reçu de la TV : elle n'arrive pas à répondre. Vérifiez que la page de la TV est ouverte, active et connectée à Internet, puis touchez Relancer."}
   else if(net.sse=='fermée'){titre='Liaison temps réel bloquée';texte='La lecture de secours est active : la connexion peut prendre une dizaine de secondes. Si elle échoue, essayez un autre navigateur ou coupez le relais privé / le VPN du téléphone.'}
   else{titre="Pas de réponse de l'écran TV";texte="Vérifiez que la page de la TV est ouverte et qu'elle affiche le même code d'écran ("+codeTag()+"). Sinon, scannez à nouveau son QR code."}
-  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="say({t:'hello'});pollNow()">Relancer</button>`;
+  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="say({t:'hello'});retryNow();pollNow()">Relancer</button>`;
 }
 const qrURL=(n)=>{try{const q=qrcode(0,'M');q.addData(joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
 const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:16px"><img alt="QR code" style="width:110px;border-radius:8px;background:#fff;padding:6px" src="${qrURL(6)}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.</span></div>`;
