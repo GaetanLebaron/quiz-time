@@ -112,37 +112,97 @@ const loadS=()=>restore(findG(lsGet(CK)));
 const gsum=()=>(lsGet(GK)||[]).filter(g=>g&&g.S&&Array.isArray(g.S.teams))   /* ignore une sauvegarde abîmée au lieu de bloquer l'envoi */
   .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',teams:g.S.teams}));
 
-/* ---------- Transport : messages via ntfy.sh ---------- */
+/* ---------- Transport ----------
+   Mise en relation via ntfy.sh, puis liaison directe WebRTC (canal de données) par le Wi-Fi : le quota gratuit de ntfy.sh
+   (quelques centaines de messages par jour et par connexion Internet) n'est plus consommé par les actions de jeu.
+   Si la liaison directe échoue (téléphone en 4G, Wi-Fi qui isole les appareils…), tout passe par ntfy.sh comme avant. */
 const T=TV?(()=>{let id=rawGet('qt-id2');if(!okId(id)){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');rawSet('qt-id2',id)}return id})():JOIN;
 const OUT=BASE+T+(TV?'s':'c'),IN=BASE+T+(TV?'c':'s');
 /* État de la liaison, affiché à l'écran pour comprendre un blocage. 429 = le service gratuit limite le nombre de requêtes. */
 const net={fail:'',why:'',got:0,ok:0,sse:'',poll:'',polled:null};
 const codeTag=()=>'…'+String(T).slice(-4);
-const refreshNet=()=>{if(TV?scr=='wait':scr=='conn')render()};
-/* File d'envoi : un message à la fois, dans l'ordre. En cas d'échec (429, réseau, serveur), le même message est renvoyé
-   avec une attente croissante (5 s, 10 s… 60 s) au lieu d'être perdu. Seul le dernier état de la TV compte : un nouvel état
-   remplace celui qui attend encore. Un seul « hello » en attente à la fois. */
-const SEND_MS=window.QT_SEND_MS||5000;
+const lnkTxt=()=>'Liaison : '+(dcOpen()?'directe par le Wi-Fi ✓':'via ntfy.sh'+(rtc.st&&rtc.st!='active'?' (liaison directe : '+rtc.st+')':''));
+const refreshNet=()=>{if(TV?scr=='wait':scr=='conn')render();const e=document.getElementById('lnk');if(e)e.textContent=lnkTxt()};
+let H=()=>{};   /* traitement d'un message reçu, quelle que soit la voie */
+
+/* --- Liaison directe WebRTC (sans serveur relais : STUN sert seulement à connaître son adresse) --- */
+const RTC_OK=!!window.RTCPeerConnection&&!window.QT_NO_RTC;
+const ICE=window.QT_ICE||[{urls:'stun:stun.l.google.com:19302'}];
+const rtc={pc:null,dc:null,rid:'',st:RTC_OK?'':'non prise en charge'};
+const dcOpen=()=>!!(rtc.dc&&rtc.dc.readyState=='open');
+function rtcClose(){const pc=rtc.pc;rtc.pc=rtc.dc=null;try{pc&&pc.close()}catch(e){}}
+/* On attend la fin de la collecte des adresses (2,5 s au plus) pour tout envoyer en un seul message. */
+const gathered=pc=>new Promise(res=>{
+  if(pc.iceGatheringState=='complete')return res();
+  const t=setTimeout(res,window.QT_ICE_MS||2500);
+  pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState=='complete'){clearTimeout(t);res()}});
+});
+function rtcPc(){
+  rtcClose();const pc=new RTCPeerConnection({iceServers:ICE});rtc.pc=pc;rtc.st='connexion…';
+  pc.onconnectionstatechange=()=>{if(rtc.pc===pc&&pc.connectionState=='failed'){rtc.st='impossible, relais ntfy.sh';refreshNet()}};
+  return pc;
+}
+function rtcWire(pc,dc){
+  rtc.dc=dc;
+  dc.onopen=()=>{if(rtc.pc!==pc)return;rtc.st='active';drainToDc();onDc(true);refreshNet()};
+  dc.onclose=()=>{if(rtc.pc!==pc)return;rtc.dc=null;rtc.st='coupée, relais ntfy.sh';onDc(false);refreshNet()};
+  dc.onmessage=e=>{try{const m=JSON.parse(e.data);net.got++;H(m)}catch(x){}};
+}
+async function rtcOffer(){   /* téléphone */
+  const pc=rtcPc();rtc.rid=Math.random().toString(36).slice(2,10);
+  rtcWire(pc,pc.createDataChannel('qt'));
+  await pc.setLocalDescription(await pc.createOffer());await gathered(pc);
+  return pc.localDescription.sdp;
+}
+async function rtcAnswer(sdp){   /* TV */
+  const pc=rtcPc();
+  pc.ondatachannel=e=>{if(rtc.pc===pc)rtcWire(pc,e.channel)};
+  await pc.setRemoteDescription({type:'offer',sdp});
+  await pc.setLocalDescription(await pc.createAnswer());await gathered(pc);
+  return pc.localDescription.sdp;
+}
+let onDc=()=>{};
+
+/* --- Envoi. Liaison directe si elle est ouverte, sinon file d'envoi ntfy.sh : un message à la fois, dans l'ordre.
+   En cas d'échec (429, réseau, serveur), le même message est renvoyé avec une attente croissante (5 s, 10 s… 60 s).
+   Seul le dernier état de la TV compte : un nouvel état remplace celui qui attend encore. Un seul « hello » en attente. */
+const SEND_MS=window.QT_SEND_MS||5000,MAX_B=3900;   /* ntfy.sh transforme un message de plus de 4 Ko en pièce jointe */
 const outQ=[];let sending=false,sendT=0,sendDelay=0,lastHello=0;
-function say(m){
-  const last=outQ[outQ.length-1];
-  if(m.k=='s'&&last&&last.k=='s'&&!(sending&&outQ.length==1)){m.ask=m.ask||last.ask;outQ[outQ.length-1]=m}
-  else if(m.t=='hello'&&outQ.some((x,i)=>x.t=='hello'&&!(sending&&i==0)))return;
-  else outQ.push(m);
+const queued=i=>!(sending&&i==0);   /* faux pour le message en cours d'envoi */
+function say(m,relay){
   if(m.t=='hello')lastHello=Date.now();
+  if(!relay&&dcOpen()){try{rtc.dc.send(JSON.stringify(m));net.ok++;return}catch(e){}}
+  const n=outQ.length,last=outQ[n-1];
+  if(m.k=='s'&&last&&last.m.k=='s'&&queued(n-1)){if(last.m.a&&!m.a){m.a=last.m.a;m.rid=last.m.rid;relay=true}outQ[n-1]={m,relay}}
+  else if(m.t=='hello'){const i=outQ.findIndex((x,i)=>x.m.t=='hello'&&queued(i));if(i>=0)outQ[i]={m,relay};else outQ.push({m,relay})}
+  else outQ.push({m,relay});
   if(!sending&&!sendT)flush();
 }
+/* La liaison directe vient de s'ouvrir : ce qui attendait part par elle (sauf offre/réponse WebRTC, devenues inutiles). */
+function drainToDc(){
+  const keep=[];
+  outQ.forEach((x,i)=>{if(!queued(i))keep.push(x);else if(!x.m.o&&!x.m.a)try{rtc.dc.send(JSON.stringify(x.m))}catch(e){}});
+  outQ.splice(0,outQ.length,...keep);
+  if(!outQ.length&&sendT){clearTimeout(sendT);sendT=0;sendDelay=0}
+}
 function retryNow(){if(sendT){clearTimeout(sendT);sendT=0;sendDelay=0;flush()}}
+const bytes=s=>new TextEncoder().encode(s).length;
+function body(m){
+  let b=JSON.stringify(m);
+  if(bytes(b)>MAX_B&&m.g){m={...m};delete m.g;b=JSON.stringify(m)}
+  if(bytes(b)>MAX_B&&m.a){m={...m};delete m.a;delete m.rid;b=JSON.stringify(m)}   /* tant pis pour la liaison directe */
+  return b;
+}
 function flush(){
   sendT=0;if(sending||!outQ.length)return;
-  sending=true;const m=outQ[0];
+  sending=true;const m=outQ[0].m;
   const done=(ok,fail,why)=>{
     sending=false;
     if(ok||fail=='drop'){outQ.shift();sendDelay=0;if(ok){net.fail='';net.why='';net.ok++}flush()}
     else{net.fail=fail;net.why=why||'';sendDelay=Math.min(60000,sendDelay?sendDelay*2:SEND_MS);sendT=setTimeout(flush,sendDelay)}
     refreshNet();
   };
-  fetch(OUT,{method:'POST',body:JSON.stringify(m)}).then(r=>{
+  fetch(OUT,{method:'POST',body:body(m)}).then(r=>{
     if(r.ok)return done(true);
     /* Le service renvoie un JSON {"error":"…"} qui précise la limite atteinte. */
     r.text().then(t=>{let w='';try{w=JSON.parse(t).error||''}catch(e){}
@@ -152,18 +212,18 @@ function flush(){
     },()=>done(false,r.status==429?'429':'HTTP '+r.status));
   }).catch(()=>done(false,'réseau'));
 }
-/* Écoute des messages. Reconnexion avec attente croissante (5 s, 10 s… 60 s) pour ne pas saturer le service, et reprise après le dernier message reçu.
-   Sur le téléphone (fallback), si la liaison temps réel est fermée ou si la TV ne répond pas, une lecture directe des derniers messages prend le relais. */
+/* Écoute des messages ntfy.sh. Reconnexion avec attente croissante (5 s, 10 s… 60 s) pour ne pas saturer le service, et reprise après le dernier message reçu.
+   Sur le téléphone (fallback), si la liaison temps réel est fermée ou si la TV ne répond pas, une lecture de secours des derniers messages prend le relais. */
 const POLL_MS=window.QT_POLL_MS||10000,POLL_FIRST=window.QT_POLL_FIRST||4000,HELLO_MS=window.QT_HELLO_MS||30000;
 let pollNow=()=>{};
-function listen(h,onState,fallback){
+function listen(onState,fallback){
   let es=null,delay=0,lastId='',lastTime=0,isOpen=false;const seen=new Set();
   const handle=txt=>{try{
     const d=JSON.parse(txt);
     if(d.event&&d.event!='message')return;
     if(d.id){if(seen.has(d.id))return;seen.add(d.id);if(seen.size>100)seen.delete(seen.values().next().value);lastId=d.id}
     if(d.time){if(lastTime&&d.time<lastTime-1)return;lastTime=Math.max(lastTime,d.time)}   /* ignore un éventuel rejeu d'anciens messages */
-    net.got++;h(JSON.parse(d.message));
+    const m=JSON.parse(d.message);net.got++;H(m);
   }catch(x){}};
   const open=()=>{
     es=new EventSource(IN+'/sse'+(lastId?'?since='+encodeURIComponent(lastId):''));
@@ -173,13 +233,13 @@ function listen(h,onState,fallback){
   };
   open();
   if(fallback){
-    /* Lecture directe toutes les 10 s, espacée jusqu'à 60 s si le service répond 429. Tant que la TV n'a pas répondu,
+    /* Lecture de secours toutes les 10 s, espacée jusqu'à 60 s si le service répond 429. Tant que la TV n'a pas répondu,
        un « hello » est renvoyé toutes les 30 s : une réponse perdue ne bloque plus la connexion. */
     let pollT=0,pollDelay=POLL_MS,busy=false;
     const poll=()=>{
       clearTimeout(pollT);pollT=setTimeout(poll,pollDelay);
-      if(busy||(isOpen&&scr!='conn'))return;   /* tout va bien */
-      if(scr=='conn'&&Date.now()-lastHello>=HELLO_MS)say({t:'hello'});
+      if(busy||dcOpen()||(isOpen&&scr!='conn'))return;   /* tout va bien */
+      if(scr=='conn'&&Date.now()-lastHello>=HELLO_MS)hello();
       busy=true;
       fetch(IN+'/json?poll=1&since='+(lastId?encodeURIComponent(lastId):'5m'))
         .then(r=>{
@@ -194,18 +254,38 @@ function listen(h,onState,fallback){
     pollNow=()=>{pollDelay=POLL_MS;poll()};
   }
 }
-const push=ask=>say({k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined});
+/* État envoyé par la TV. extra = réponse WebRTC : ce message passe forcément par ntfy.sh. */
+const push=(ask,extra)=>{const m={k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined};if(extra)say(Object.assign(m,extra),true);else say(m)};
 function tvInit(){
   joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+T;
-  listen(m=>{conn=true;if(m.t=='hello'&&!S)scr='cfgd';onCmd(m)},ok=>{tvOk=ok;render()});
+  H=m=>{
+    conn=true;if(m.t=='hello'&&!S)scr='cfgd';
+    /* Offre de liaison directe du téléphone : la TV répond en joignant son état (un seul message ntfy.sh). */
+    if(m.o&&RTC_OK)rtcAnswer(m.o).then(a=>{saveS();push(false,{a,rid:m.rid});render()},()=>{rtc.st='impossible, relais ntfy.sh';onCmd(m)});
+    else onCmd(m);
+  };
+  listen(ok=>{tvOk=ok;render()});
   if(S)push(true);
 }
+/* Téléphone : « hello » demande l'état de la TV. Sans liaison directe ouverte, il porte une nouvelle offre WebRTC. */
+let offering=false;
+function hello(){
+  if(dcOpen()||!RTC_OK)return say({t:'hello'});
+  if(offering)return;offering=true;lastHello=Date.now();
+  rtcOffer().then(o=>say({t:'hello',o,rid:rtc.rid},true),()=>{rtc.st='impossible, relais ntfy.sh';say({t:'hello'})}).finally(()=>{offering=false});
+}
 function ctlInit(){
-  listen(d=>{
-    if(d.k=='s'){cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;if(d.ask)say({t:'hello'})}
+  H=d=>{
+    if(d.k=='s'){
+      cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;
+      if(d.a&&d.rid==rtc.rid&&rtc.pc&&rtc.pc.signalingState=='have-local-offer')rtc.pc.setRemoteDescription({type:'answer',sdp:d.a}).catch(()=>{rtc.st='impossible, relais ntfy.sh'});
+      if(d.ask)hello();
+    }
     render();
-  },ok=>{pOk=ok;if(ok)say({t:'hello'});render()},true);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)say({t:'hello'})});
+  };
+  onDc=open=>{if(open)say({t:'hello'});else setTimeout(()=>{if(!dcOpen())hello()},1500)};
+  listen(ok=>{pOk=ok;if(ok)hello();render()},true);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)hello()});
 }
 const cmd=(t,p)=>say({t,p});
 function go(){
@@ -257,7 +337,7 @@ function renderSetup(){
     ${cfg.timerOn?`<div class="row" style="align-items:center"><input type="number" min="5" max="300" value="${cfg.timerSec}" aria-label="Durée en secondes" oninput="cfg.timerSec=Math.max(5,Math.min(300,+this.value||30));saveCfg()"><span class="sub">secondes par question (5 à 300)</span></div>`:''}
   </section>
   <button class="btn pink big" onclick="go()">Lancer la partie</button>${savedHTML()}
-  <p class="foot sub"><a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
+  <p class="foot sub"><span id="lnk">${esc(lnkTxt())}</span><br><a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
 }
 const addTeam=()=>{cfg.teams.push('Équipe '+(cfg.teams.length+1));saveCfg();render()};
 const rmTeam=i=>{if(cfg.teams.length>2){cfg.teams.splice(i,1);saveCfg();render()}};
@@ -286,7 +366,7 @@ function endHTML(s,ctl){
   return `<div class="end"><p class="sub">${w.length>1?'Égalité entre':'Victoire de'}</p><div class="win">🏆 ${esc(w.join(' & '))}</div>
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
-const netHTML=()=>`<p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc((net.fail=='429'?'service saturé (429)':net.fail)+(net.why?' « '+net.why+' »':'')+(outQ.length?', nouvel essai en cours':'')):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture directe : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
+const netHTML=()=>`<p class="st sub" style="font-size:.85rem">${esc(lnkTxt())}</p><p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc((net.fail=='429'?'service saturé (429)':net.fail)+(net.why?' « '+net.why+' »':'')+(outQ.length?', nouvel essai en cours':'')):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture de secours : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
 function connHelp(){
   const sat=net.fail=='429'||/429/.test(net.poll);
   let titre,texte;
@@ -294,7 +374,7 @@ function connHelp(){
   else if(net.poll=='OK'&&net.polled===0){titre="La TV ne publie aucun message";texte="Le service n'a rien reçu de la TV : elle n'arrive pas à répondre. Vérifiez que la page de la TV est ouverte, active et connectée à Internet, puis touchez Relancer."}
   else if(net.sse=='fermée'){titre='Liaison temps réel bloquée';texte='La lecture de secours est active : la connexion peut prendre une dizaine de secondes. Si elle échoue, essayez un autre navigateur ou coupez le relais privé / le VPN du téléphone.'}
   else{titre="Pas de réponse de l'écran TV";texte="Vérifiez que la page de la TV est ouverte et qu'elle affiche le même code d'écran ("+codeTag()+"). Sinon, scannez à nouveau son QR code."}
-  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="say({t:'hello'});retryNow();pollNow()">Relancer</button>`;
+  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="hello();retryNow();pollNow()">Relancer</button>`;
 }
 const qrURL=(n)=>{try{const q=qrcode(0,'M');q.addData(joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
 const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:16px"><img alt="QR code" style="width:110px;border-radius:8px;background:#fff;padding:6px" src="${qrURL(6)}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.</span></div>`;
