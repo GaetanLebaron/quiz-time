@@ -61,6 +61,11 @@ L'écran d'attente affiche le **code de l'écran** (4 derniers caractères) sur 
 - **« service saturé (429) » :** le service gratuit ntfy.sh limite le nombre de requêtes par connexion Internet (TV et téléphone sur le même Wi-Fi comptent ensemble). Ferme les pages Quiz Time inutiles, patiente 2 minutes, puis touche « Relancer ». Les commandes du Maître du Jeu sont réessayées automatiquement, et la reconnexion se fait avec une attente croissante pour ne pas aggraver la saturation.
 - **Aucune erreur, mais pas de réponse :** vérifie que la page de la TV est ouverte et active (certaines TV mettent les onglets en veille).
 
+Deux lignes de diagnostic complètent l'écran d'attente du téléphone :
+
+- **Réception en temps réel : ouverte / fermée.** « Fermée » signifie que le téléphone n'arrive pas à garder la liaison continue avec le service.
+- **Lecture directe : OK (n message(s) de la TV).** Si la liaison temps réel est fermée ou si la TV ne répond pas, le téléphone lit directement, toutes les 10 secondes, les derniers messages publiés par la TV. La partie reste jouable dans ce mode, avec un peu de retard. « 0 message » indique que la TV ne publie rien : elle n'arrive pas à répondre.
+
 ## Échange de messages
 
 La TV et le téléphone s'envoient leurs messages via le service public ntfy.sh, sans compte. Les noms d'équipes, questions et scores passent par ce service, protégés par un code aléatoire contenu dans le QR code. Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy.

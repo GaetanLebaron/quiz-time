@@ -115,7 +115,7 @@ const gsum=()=>(lsGet(GK)||[]).map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,ro
 const T=TV?(()=>{let id=rawGet('qt-id2');if(!okId(id)){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');rawSet('qt-id2',id)}return id})():JOIN;
 const OUT=BASE+T+(TV?'s':'c'),IN=BASE+T+(TV?'c':'s');
 /* État de la liaison, affiché à l'écran pour comprendre un blocage. 429 = le service gratuit limite le nombre de requêtes. */
-const net={fail:'',got:0,ok:0};
+const net={fail:'',got:0,ok:0,sse:'',poll:'',polled:null};
 const codeTag=()=>'…'+String(T).slice(-4);
 const refreshNet=()=>{if(TV?scr=='wait':scr=='conn')render()};
 function say(m,tries=0){
@@ -125,22 +125,37 @@ function say(m,tries=0){
     if(r&&r.ok===false)net.fail='HTTP '+r.status;else{net.fail='';net.ok++}refreshNet();
   }).catch(()=>{net.fail='réseau';refreshNet()});
 }
-/* Écoute des messages. Reconnexion avec attente croissante (5 s, 10 s… 60 s) pour ne pas saturer le service, et reprise après le dernier message reçu. */
-function listen(h,onState){
-  let es=null,delay=0,lastId='',lastTime=0;const seen=new Set();
+/* Écoute des messages. Reconnexion avec attente croissante (5 s, 10 s… 60 s) pour ne pas saturer le service, et reprise après le dernier message reçu.
+   Sur le téléphone (fallback), si la liaison temps réel est fermée ou si la TV ne répond pas, une lecture directe des derniers messages prend le relais. */
+const POLL_MS=window.QT_POLL_MS||10000,POLL_FIRST=window.QT_POLL_FIRST||4000;
+function listen(h,onState,fallback){
+  let es=null,delay=0,lastId='',lastTime=0,isOpen=false,helloSent=false;const seen=new Set();
+  const handle=txt=>{try{
+    const d=JSON.parse(txt);
+    if(d.event&&d.event!='message')return;
+    if(d.id){if(seen.has(d.id))return;seen.add(d.id);if(seen.size>100)seen.delete(seen.values().next().value);lastId=d.id}
+    if(d.time){if(lastTime&&d.time<lastTime-1)return;lastTime=Math.max(lastTime,d.time)}   /* ignore un éventuel rejeu d'anciens messages */
+    net.got++;h(JSON.parse(d.message));
+  }catch(x){}};
   const open=()=>{
     es=new EventSource(IN+'/sse'+(lastId?'?since='+encodeURIComponent(lastId):''));
-    es.onopen=()=>{delay=0;onState(true)};
-    es.onerror=()=>{onState(false);try{es.close()}catch(e){}delay=Math.min(60000,delay?delay*2:5000);setTimeout(open,delay)};
-    es.onmessage=e=>{try{
-      const d=JSON.parse(e.data);
-      if(d.event&&d.event!='message')return;
-      if(d.id){if(seen.has(d.id))return;seen.add(d.id);if(seen.size>100)seen.delete(seen.values().next().value);lastId=d.id}
-      if(d.time){if(lastTime&&d.time<lastTime-1)return;lastTime=Math.max(lastTime,d.time)}   /* ignore un éventuel rejeu d'anciens messages */
-      net.got++;h(JSON.parse(d.message));
-    }catch(x){}};
+    es.onopen=()=>{delay=0;isOpen=true;net.sse='ouverte';onState(true)};
+    es.onerror=()=>{isOpen=false;net.sse='fermée';onState(false);try{es.close()}catch(e){}delay=Math.min(60000,delay?delay*2:5000);setTimeout(open,delay)};
+    es.onmessage=e=>handle(e.data);
   };
   open();
+  if(fallback){
+    const poll=()=>{
+      if(isOpen&&scr!='conn')return;   /* tout va bien */
+      if(scr=='conn'&&!helloSent){helloSent=true;say({t:'hello'})}
+      fetch(IN+'/json?poll=1&since='+(lastId?encodeURIComponent(lastId):'5m'))
+        .then(r=>{if(!r.ok){net.poll='HTTP '+r.status;return ''}net.poll='OK';return r.text()})
+        .then(t=>{const L=String(t).split('\n').filter(Boolean);net.polled=L.length;L.forEach(handle);refreshNet()})
+        .catch(()=>{net.poll='erreur réseau';refreshNet()});
+    };
+    setTimeout(()=>{poll();setInterval(poll,POLL_MS)},POLL_FIRST);
+    window.pollNow=()=>{helloSent=false;poll()};
+  }
 }
 const push=ask=>say({k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined});
 function tvInit(){
@@ -152,7 +167,7 @@ function ctlInit(){
   listen(d=>{
     if(d.k=='s'){cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;if(d.ask)say({t:'hello'})}
     render();
-  },ok=>{pOk=ok;if(ok)say({t:'hello'});render()});
+  },ok=>{pOk=ok;if(ok)say({t:'hello'});render()},true);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)say({t:'hello'})});
 }
 const cmd=(t,p)=>say({t,p});
@@ -234,20 +249,22 @@ function endHTML(s,ctl){
   return `<div class="end"><p class="sub">${w.length>1?'Égalité entre':'Victoire de'}</p><div class="win">🏆 ${esc(w.join(' & '))}</div>
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
-const netHTML=()=>`<p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc(net.fail=='429'?'service saturé (429), nouvel essai en cours':net.fail):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`;
+const netHTML=()=>`<p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc(net.fail=='429'?'service saturé (429), nouvel essai en cours':net.fail):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture directe : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
 function connHelp(){
   const sat=net.fail=='429';
-  const titre=sat?'Service de messages saturé':"Pas de réponse de l'écran TV";
-  const texte=sat?'Le service gratuit limite le nombre de requêtes. Fermez les autres pages Quiz Time, patientez 2 minutes, puis touchez Relancer.'
-    :"Vérifiez que la page de la TV est ouverte et qu'elle affiche le même code d'écran ("+codeTag()+"). Sinon, scannez à nouveau son QR code.";
-  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="say({t:'hello'})">Relancer</button>`;
+  let titre,texte;
+  if(sat){titre='Service de messages saturé';texte='Le service gratuit limite le nombre de requêtes. Fermez les autres pages Quiz Time, patientez 2 minutes, puis touchez Relancer.'}
+  else if(net.poll=='OK'&&net.polled===0){titre="La TV ne publie aucun message";texte="Le service n'a rien reçu de la TV : elle n'arrive pas à répondre. Vérifiez que la page de la TV est ouverte, active et connectée à Internet, puis touchez Relancer."}
+  else if(net.sse=='fermée'){titre='Liaison temps réel bloquée';texte='La lecture de secours est active : la connexion peut prendre une dizaine de secondes. Si elle échoue, essayez un autre navigateur ou coupez le relais privé / le VPN du téléphone.'}
+  else{titre="Pas de réponse de l'écran TV";texte="Vérifiez que la page de la TV est ouverte et qu'elle affiche le même code d'écran ("+codeTag()+"). Sinon, scannez à nouveau son QR code."}
+  return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="say({t:'hello'});pollNow()">Relancer</button>`;
 }
 const qrURL=(n)=>{try{const q=qrcode(0,'M');q.addData(joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
 const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:16px"><img alt="QR code" style="width:110px;border-radius:8px;background:#fff;padding:6px" src="${qrURL(6)}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.</span></div>`;
 function tvWait(){
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
-  const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>'
+  const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>'+netHTML()
     :'<p class="st sub">En attente du Maître du Jeu…</p>'+`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`+netHTML();
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}${err?`<p class="st" style="color:var(--pink)">${esc(err)}</p>`:''}<p class="url">${esc(joinUrl)}</p></div>`;
