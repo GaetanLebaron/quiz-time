@@ -30,7 +30,7 @@ Q = [
 ("sportives","Quelle athlète américaine, double championne olympique en 1932, est devenue une grande golfeuse ?","Babe Didrikson","Elle a remporté dix tournois majeurs de golf."),
 ("sportives","Quelle skieuse de fond norvégienne a remporté 15 médailles olympiques, dont 8 en or ?","Marit Bjørgen","Elle a pris sa retraite après les Jeux de 2018."),
 ("sportives","Quelle athlète française a créé la surprise en remportant le 400 m aux JO de Mexico ?","Colette Besson","Elle était professeure d'éducation physique."),
-("sportives","Quelle athlète française, championne olympique du disque et du poids en 1948, était aussi pianiste ?","Micheline Ostermeyer","Elle était une petite-nièce de Victor Hugo."),
+("sportives","Quelle athlète française, championne olympique du disque et du poids en 1948, était aussi pianiste ?","Micheline Ostermeyer","Elle a aussi remporté le bronze au saut en hauteur."),
 ("sportives","Quelle patineuse française a réussi un salto arrière retombant sur une lame aux JO de Nagano ?","Surya Bonaly","Cette figure était interdite en compétition."),
 ("sportives","Quelle navigatrice britannique a battu en 2005 le record du tour du monde à la voile en solitaire ?","Ellen MacArthur","Elle a ensuite créé une fondation pour l'économie circulaire."),
 ("sportives","Quelle navigatrice française a été la première femme à faire le tour du monde en solitaire en course ?","Isabelle Autissier","Elle a ensuite présidé le WWF France."),
@@ -148,7 +148,7 @@ Q = [
 ("sports","Quel art martial japonais se pratique avec un grand arc asymétrique ?","le kyudo","La beauté du geste compte autant que la cible."),
 ("sports","Quel sport hongrois se joue au pied sur une table incurvée ?","le teqball","Il a été inventé en 2014."),
 # --- Jeux de société
-("jeux-societe","Quel jeu de négociation sans dés, situé dans l'Europe de 1914, aurait été apprécié d'Henry Kissinger ?","Diplomacy","Les alliances s'y nouent et s'y trahissent entre les tours."),
+("jeux-societe","Quel jeu de négociation sans dés oppose sept grandes puissances dans l'Europe de 1901 ?","Diplomacy","Il a été inventé par l'Américain Allan Calhamer en 1959."),
 ("jeux-societe","Quel jeu de tuiles numérotées a été inventé par un Roumain installé en Israël ?","le Rummikub","Il mélange les règles du rami et des dominos."),
 ("jeux-societe","Quel jeu de Ravensburger fait coulisser des couloirs pour atteindre des trésors ?","le Labyrinthe","Il est sorti en 1986."),
 ("jeux-societe","Quel jeu de cartes d'Antoine Bauza fait bâtir une merveille du monde antique ?","7 Wonders","Il se joue jusqu'à sept joueurs."),
@@ -182,7 +182,7 @@ Q = [
 # --- Fromages
 ("fromages","Quel fromage auvergnat n'est fabriqué qu'à la belle saison, au lait cru de vaches à l'herbe ?","le salers","Il est fabriqué dans une cuve en bois appelée « gerle »."),
 ("fromages","Quel fromage champenois présente un creux sur le dessus, appelé « fontaine » ?","le langres","Certains y versent du marc de Champagne."),
-("fromages","Quel fromage bourguignon à croûte orangée est lavé au marc de Bourgogne ?","l'époisses","Brillat-Savarin l’aurait surnommé « le roi des fromages »."),
+("fromages","Quel fromage bourguignon à croûte orangée est lavé au marc de Bourgogne ?","l'époisses","Son appellation d'origine date de 1991."),
 ("fromages","Quel fromage de chèvre provençal est enveloppé dans des feuilles de châtaignier ?","le banon","Les feuilles sont nouées avec du raphia."),
 ("fromages","Quel fromage normand est souvent moulé en forme de cœur ?","le neufchâtel","Selon la légende, les fermières l'offraient aux soldats anglais pendant la guerre de Cent Ans."),
 ("fromages","Quel fromage jurassien est traversé par une raie de charbon végétal ?","le morbier","La raie servait autrefois à protéger le caillé du matin."),

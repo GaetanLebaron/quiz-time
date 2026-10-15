@@ -81,7 +81,7 @@ Q = [
 ("sommets","Quel est le plus haut sommet de l'Antarctique ?","le mont Vinson","Il n'a été gravi pour la première fois qu'en 1966."),
 ("sommets","Quel est le plus haut sommet du Canada ?","le mont Logan","Il se trouve au Yukon."),
 ("sommets","Quel est le plus haut sommet de Suisse ?","la pointe Dufour","Elle fait partie du massif du Mont-Rose."),
-("sommets","Quel est le point culminant des Vosges ?","le Grand Ballon","Il culmine à 1 424 mètres."),
+("sommets","Quel est le point culminant de la Belgique ?","le signal de Botrange","Une butte artificielle y a été élevée pour atteindre 700 mètres."),
 ("sommets","Quel est le point culminant de la Corse ?","le monte Cinto","Il dépasse les 2 700 mètres."),
 ("sommets","Quel volcan de La Réunion est l'un des plus actifs du monde ?","le piton de la Fournaise","Il entre en éruption presque chaque année."),
 ("sommets","Quel est le plus haut sommet de Grèce, demeure des dieux ?","le mont Olympe","Il culmine à 2 917 mètres."),

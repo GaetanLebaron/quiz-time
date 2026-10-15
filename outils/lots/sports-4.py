@@ -28,11 +28,11 @@ Q = [
 # --- Sportifs
 ("sportifs","Quel coureur surnommé le « Finlandais volant » a remporté neuf titres olympiques ?","Paavo Nurmi","Il courait avec un chronomètre à la main."),
 ("sportifs","Quel Américain a sauté 8,90 m en longueur aux Jeux de Mexico en 1968 ?","Bob Beamon","Il a battu le record du monde de 55 centimètres."),
-("sportifs","Quel perchiste ukrainien a battu le record du monde 35 fois ?","Sergueï Bubka","Il a été le premier à franchir 6 mètres."),
+("sportifs","Quel perchiste ukrainien a été le premier à franchir 6 mètres ?","Sergueï Bubka","Il a battu le record du monde à de nombreuses reprises, en salle comme en plein air."),
 ("sportifs","Quel coureur britannique a couru le mile en moins de quatre minutes, en 1954 ?","Roger Bannister","Il était étudiant en médecine."),
 ("sportifs","Quel nageur australien était surnommé « la Torpille » ?","Ian Thorpe","Il chaussait du 52."),
 ("sportifs","Quel nageur est devenu en 1952 le premier Français champion olympique de natation ?","Jean Boiteux","Son père a sauté tout habillé dans la piscine pour le féliciter."),
-("sportifs","Quel skieur suédois détient l'un des plus grands nombres de victoires en Coupe du monde ?","Ingemar Stenmark","Il a remporté 86 courses."),
+("sportifs","Quel skieur suédois a remporté 86 courses de Coupe du monde de ski alpin ?","Ingemar Stenmark","Il était le maître du slalom et du slalom géant."),
 ("sportifs","Quel skieur autrichien a remporté les trois épreuves de ski alpin aux Jeux de 1956 ?","Toni Sailer","Jean-Claude Killy a réussi le même exploit en 1968."),
 ("sportifs","Quel biathlète norvégien a remporté huit titres olympiques ?","Ole Einar Bjørndalen","On le surnommait « le Roi du biathlon »."),
 ("sportifs","Quel boxeur américain est souvent considéré comme le meilleur de l'histoire, toutes catégories confondues ?","Sugar Ray Robinson","L'expression « poids pour poids » aurait été inventée pour lui."),
