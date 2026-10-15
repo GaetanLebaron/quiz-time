@@ -48,10 +48,11 @@ function pick(th){
 function mkOpts(q){
   let w=[];
   if(q.w&&q.w.length>=3)w=shuf(q.w).slice(0,3);
-  else if(q.yr&&/^\d+$/.test(q.a)){const s=new Set(),max=new Date().getFullYear();while(s.size<3){const o=+q.a+(Math.random()*40-20|0);if(o>0&&o<=max&&String(o)!=q.a)s.add(String(o))}w=[...s]}   /* années proches, jamais dans le futur */
+  else if(q.yr&&/^\d+$/.test(q.a)){const s=new Set(),max=new Date().getFullYear(),sp=q.l>=4?8:q.l==3?12:20;while(s.size<3){const o=+q.a+(Math.random()*2*sp-sp|0);if(o>0&&o<=max&&String(o)!=q.a)s.add(String(o))}w=[...s]}   /* années proches (plus serrées aux niveaux élevés), jamais dans le futur */
   else{
     const seen=new Set([q.a]);
-    for(const pool of [Q.filter(x=>x.g&&x.g==q.g),Q.filter(x=>x.th==q.th),Q]){
+    /* D'abord les réponses du même groupe et d'un niveau voisin : aux niveaux difficiles, les leurres sont eux aussi pointus */
+    for(const pool of [Q.filter(x=>x.g&&x.g==q.g&&Math.abs(x.l-q.l)<=1),Q.filter(x=>x.g&&x.g==q.g),Q.filter(x=>x.th==q.th),Q]){
       for(const x of shuf(pool)){if(w.length>=3)break;if(!seen.has(x.a)){seen.add(x.a);w.push(x.a)}}
       if(w.length>=3)break;
     }
