@@ -406,7 +406,7 @@ function tvTop(s){
   const dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
   const r=s.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.s-a.s||a.i-b.i);
   const chips=r.map((t,k)=>`<div class="chip ${t.i==s.ti?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><b>${t.s}</b></div>`).join('');
-  return `<div class="tvhead"><div class="brand">Quiz <span>Time</span></div><div class="tvtour"><span>Tour ${s.round+1} / ${s.rounds}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
+  return `<div class="tvhead"><div class="tvtour"><span>Tour ${s.round+1} / ${s.rounds}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
 }
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
