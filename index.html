@@ -85,7 +85,6 @@ body.tv .grid{grid-template-columns:1fr 360px}body.tv .q{font-size:clamp(2rem,4.
   <div id="app"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
 const THEMES=[
@@ -161,7 +160,6 @@ function onCmd(m){
   saveS();push();render();
 }
 let tvOk=false,pOk=false,cOk=false;const t0=Date.now();
-const ICE={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
 const GK='quiz-time-games',CK='quiz-time-cur';let gl=[];
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -179,40 +177,28 @@ const loadS=()=>restore(findG(lsGet(CK)));
 const gsum=()=>(lsGet(GK)||[]).map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',teams:g.S.teams}));
 const qrURL=()=>{try{const q=qrcode(0,'M');q.addData(joinUrl);q.make();return q.createDataURL(6,2)}catch(e){return''}};
 const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:16px"><img alt="QR code" style="width:110px;border-radius:8px;background:#fff;padding:6px" src="${qrURL()}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou recharger sa page : la partie est conservée.</span></div>`;
-const say=m=>{try{if(conn&&conn.open)conn.send(m)}catch(e){}};
-const push=()=>say({scr,s:pub(),g:gsum()});
-function tvInit(){
-  let id=null;try{id=localStorage.getItem('qt-id')}catch(e){}
-  if(!id){id='qt'+Math.random().toString(36).slice(2,8);try{localStorage.setItem('qt-id',id)}catch(e){}}
-  joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+id;
-  if(typeof Peer=='undefined'){err='Bibliothèque PeerJS non chargée : accès Internet requis.';render();return}
-  peer=new Peer(id,ICE);
-  peer.on('open',()=>{tvOk=true;err='';render()});
-  peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
-  peer.on('error',e=>{
-    if(e.type=='unavailable-id'){err='Reprise de la connexion…';render();setTimeout(()=>{try{peer.destroy()}catch(x){}tvInit()},3000);return}
-    err='Erreur réseau ('+e.type+')';render()});
-  peer.on('connection',c=>{
-    if(conn&&conn!==c)try{conn.close()}catch(e){}
-    conn=c;if(!S)scr='cfgd';
-    c.on('open',()=>{push();render()});
-    c.on('data',onCmd);
-    c.on('close',()=>{if(conn===c){conn=null;if(!S)scr='wait';render()}});
-  });
+const BASE='https://ntfy.sh/';
+const T=TV?(()=>{let id=null;try{id=localStorage.getItem('qt-id2')}catch(e){}if(!id){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');try{localStorage.setItem('qt-id2',id)}catch(e){}}return id})():JOIN;
+const OUT=BASE+T+(TV?'s':'c'),IN=BASE+T+(TV?'c':'s');
+const say=m=>{fetch(OUT,{method:'POST',body:JSON.stringify(m)}).catch(()=>{})};
+function listen(h,st){
+  const es=new EventSource(IN+'/sse');
+  es.onopen=()=>st(true);es.onerror=()=>st(false);
+  es.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event&&d.event!='message')return;h(JSON.parse(d.message))}catch(x){}};
 }
-
-/* ---------- Télécommande (smartphone du Maître du Jeu) ---------- */
-function ctlConnect(){
-  try{conn=peer.connect(JOIN,{reliable:true})}catch(e){return}
-  conn.on('open',()=>{cOk=true;render()});
-  conn.on('data',d=>{scr=d.scr;st=d.s;gl=d.g||[];render()});
-  conn.on('close',()=>{scr='lost';render();setTimeout(ctlConnect,2000)});
+const push=ask=>{say({k:'s',scr,s:pub(),ask:ask===true});if(scr=='cfgd')say({k:'g',g:gsum().slice(0,6)})};
+function tvInit(){
+  joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+T;
+  listen(m=>{conn=true;if(m.t=='hello'&&!S)scr='cfgd';onCmd(m)},ok=>{tvOk=ok;render()});
+  if(S)push(true);
 }
 function ctlInit(){
-  peer=new Peer(undefined,ICE);
-  peer.on('open',()=>{pOk=true;render();ctlConnect()});
-  peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
-  peer.on('error',e=>{err=e.type;scr='lost';render();if(e.type=='peer-unavailable')setTimeout(ctlConnect,2000)});
+  listen(d=>{
+    if(d.k=='s'){cOk=true;scr=d.scr;st=d.s;if(d.ask)say({t:'hello'})}
+    else if(d.k=='g')gl=d.g||[];
+    render();
+  },ok=>{pOk=ok;if(ok)say({t:'hello'});render()});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)say({t:'hello'})});
 }
 const cmd=(t,p)=>say({t,p});
 function go(){
@@ -290,7 +276,7 @@ function render(){
   $('#meta').textContent='';
   const a=$('#app');
   if(TV){const s=pub();a.innerHTML=scr=='game'&&s?lostBar()+tvGame(s):scr=='end'&&s?endHTML(s,false):tvWait()}
-  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de connexion : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?'<p class="sub">La liaison ne s\'établit pas. Mettez le téléphone et la TV sur le même Wi-Fi, coupez VPN et relais privé, vérifiez que la page TV est ouverte, puis rechargez cette page.</p>':''}</div>`;
+  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de connexion : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?'<p class="sub">Pas de réponse de l\'écran TV. Vérifiez que sa page est ouverte, puis touchez Relancer.</p><button class="btn" onclick="say({t:\'hello\'})">Relancer</button>':''}</div>`;
   else if(scr=='lost')a.innerHTML=`<div class="card"><h3>Connexion perdue</h3><p>Reconnexion automatique en cours. Vérifiez que l'écran TV est ouvert.</p>${err?`<p class="sub">${esc(err)}</p>`:''}<button class="btn big" onclick="location.reload()">Reconnecter</button></div>`;
   else if(scr=='cfgd'||!st)a.innerHTML=renderSetup();
   else a.innerHTML=scr=='end'?endHTML(st,true):ctlGame(st);
