@@ -58,14 +58,14 @@ Les parties sont conservées dans le navigateur de la TV (les 10 dernières). Ut
 L'écran d'attente affiche le **code de l'écran** (4 derniers caractères) sur la TV comme sur le téléphone, et l'état des envois.
 
 - **Codes différents :** le téléphone a mémorisé un autre écran. Touche « Scanner le QR code d'un autre écran », puis scanne le QR code de la TV.
-- **« service saturé (429) » :** le service gratuit ntfy.sh limite le nombre de requêtes par connexion Internet (TV et téléphone sur le même Wi-Fi comptent ensemble). Ferme les pages Quiz Time inutiles, patiente 2 minutes, puis touche « Relancer ». Les commandes du Maître du Jeu sont réessayées automatiquement, et la reconnexion se fait avec une attente croissante pour ne pas aggraver la saturation.
+- **« service saturé (429) » :** le service gratuit ntfy.sh limite le nombre de requêtes par connexion Internet (TV et téléphone sur le même Wi-Fi comptent ensemble). Le plus efficace : passer le téléphone en données mobiles (Wi-Fi coupé), il a alors sa propre limite. Sinon, ferme les pages Quiz Time inutiles et patiente 2 minutes. Aucun message n'est perdu : la TV comme le téléphone renvoient automatiquement chaque message refusé, dans l'ordre, avec une attente croissante (5 s, 10 s… jusqu'à 60 s). Le motif exact donné par le service s'affiche entre guillemets (par exemple « limit reached: too many requests »).
 - **Aucune erreur, mais pas de réponse :** vérifie que la page de la TV est ouverte et active (certaines TV mettent les onglets en veille).
 
 Deux lignes de diagnostic complètent l'écran d'attente du téléphone :
 
 - **Réception en temps réel : ouverte / fermée.** « Fermée » signifie que le téléphone n'arrive pas à garder la liaison continue avec le service.
-- **Lecture directe : OK (n message(s) de la TV).** Si la liaison temps réel est fermée ou si la TV ne répond pas, le téléphone lit directement, toutes les 10 secondes, les derniers messages publiés par la TV. La partie reste jouable dans ce mode, avec un peu de retard. « 0 message » indique que la TV ne publie rien : elle n'arrive pas à répondre.
+- **Lecture directe : OK (n message(s) de la TV).** Si la liaison temps réel est fermée ou si la TV ne répond pas, le téléphone lit directement, toutes les 10 secondes, les derniers messages publiés par la TV. La partie reste jouable dans ce mode, avec un peu de retard. « 0 message » indique que la TV ne publie rien : regarde alors la ligne « Envoi » affichée sur la TV. Tant que la TV n'a pas répondu, le téléphone renvoie un signal toutes les 30 secondes.
 
 ## Échange de messages
 
-La TV et le téléphone s'envoient leurs messages via le service public ntfy.sh, sans compte. Les noms d'équipes, questions et scores passent par ce service, protégés par un code aléatoire contenu dans le QR code. Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy.
+La TV et le téléphone s'envoient leurs messages via le service public ntfy.sh, sans compte. Les noms d'équipes, questions et scores passent par ce service, protégés par un code aléatoire contenu dans le QR code. Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy : il suffit alors de définir `window.QT_BASE='https://mon-serveur/'` avant le chargement de `app.js` dans `index.html`.
