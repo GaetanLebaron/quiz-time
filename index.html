@@ -160,6 +160,8 @@ function onCmd(m){
   else if(S&&m.t=='next'&&S.phase=='r')next();
   saveS();push();render();
 }
+let tvOk=false,pOk=false,cOk=false;const t0=Date.now();
+const ICE={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
 const GK='quiz-time-games',CK='quiz-time-cur';let gl=[];
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -184,8 +186,8 @@ function tvInit(){
   if(!id){id='qt'+Math.random().toString(36).slice(2,8);try{localStorage.setItem('qt-id',id)}catch(e){}}
   joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+id;
   if(typeof Peer=='undefined'){err='Bibliothèque PeerJS non chargée : accès Internet requis.';render();return}
-  peer=new Peer(id);
-  peer.on('open',()=>render());
+  peer=new Peer(id,ICE);
+  peer.on('open',()=>{tvOk=true;err='';render()});
   peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
   peer.on('error',e=>{
     if(e.type=='unavailable-id'){err='Reprise de la connexion…';render();setTimeout(()=>{try{peer.destroy()}catch(x){}tvInit()},3000);return}
@@ -202,12 +204,13 @@ function tvInit(){
 /* ---------- Télécommande (smartphone du Maître du Jeu) ---------- */
 function ctlConnect(){
   try{conn=peer.connect(JOIN,{reliable:true})}catch(e){return}
+  conn.on('open',()=>{cOk=true;render()});
   conn.on('data',d=>{scr=d.scr;st=d.s;gl=d.g||[];render()});
   conn.on('close',()=>{scr='lost';render();setTimeout(ctlConnect,2000)});
 }
 function ctlInit(){
-  peer=new Peer();
-  peer.on('open',ctlConnect);
+  peer=new Peer(undefined,ICE);
+  peer.on('open',()=>{pOk=true;render();ctlConnect()});
   peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
   peer.on('error',e=>{err=e.type;scr='lost';render();if(e.type=='peer-unavailable')setTimeout(ctlConnect,2000)});
 }
@@ -264,7 +267,7 @@ function endHTML(st,ctl){
 function tvWait(){
   let qr='';
   if(joinUrl&&typeof qrcode!='undefined'){const q=qrcode(0,'M');q.addData(joinUrl);q.make();qr=`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${q.createDataURL(8,2)}"></div>`}
-  const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>':'<p class="st sub">En attente du Maître du Jeu…</p>';
+  const s=conn?'<p class="st on">✓ Maître du Jeu connecté · configuration en cours sur son téléphone</p>':'<p class="st sub">En attente du Maître du Jeu…</p>'+`<p class="st sub" style="font-size:.85rem">Serveur de connexion : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`;
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible : bibliothèque non chargée. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}${err?`<p class="st" style="color:var(--pink)">${esc(err)}</p>`:''}<p class="url">${esc(joinUrl)}</p></div>`;
 }
@@ -287,12 +290,13 @@ function render(){
   $('#meta').textContent='';
   const a=$('#app');
   if(TV){const s=pub();a.innerHTML=scr=='game'&&s?lostBar()+tvGame(s):scr=='end'&&s?endHTML(s,false):tvWait()}
-  else if(scr=='conn')a.innerHTML='<p class="sub">Connexion à l\'écran principal…</p>';
+  else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de connexion : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?'<p class="sub">La liaison ne s\'établit pas. Mettez le téléphone et la TV sur le même Wi-Fi, coupez VPN et relais privé, vérifiez que la page TV est ouverte, puis rechargez cette page.</p>':''}</div>`;
   else if(scr=='lost')a.innerHTML=`<div class="card"><h3>Connexion perdue</h3><p>Reconnexion automatique en cours. Vérifiez que l'écran TV est ouvert.</p>${err?`<p class="sub">${esc(err)}</p>`:''}<button class="btn big" onclick="location.reload()">Reconnecter</button></div>`;
   else if(scr=='cfgd'||!st)a.innerHTML=renderSetup();
   else a.innerHTML=scr=='end'?endHTML(st,true):ctlGame(st);
 }
 if(TV)loadS();render();TV?tvInit():ctlInit();
+if(!TV)setInterval(()=>{if(scr=='conn')render()},1000);
 </script>
 </body>
 </html>
