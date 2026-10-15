@@ -9,7 +9,7 @@ Q = [
 ("personnages","Comment s'appelle le ranger de l'espace de « Toy Story » ?","Buzz l'Éclair","Sa devise : « Vers l'infini et au-delà ! »"),
 ("personnages","Comment s'appelle le chien de Mickey ?","Pluto","Il porterait le nom de la planète Pluton, découverte en 1930."),
 ("personnages","Comment s'appelle la fiancée de Mickey ?","Minnie","Minnie est apparue en même temps que Mickey, en 1928.",["Daisy","Clarabelle","Mafalda"]),
-("personnages","Comment s'appellent les trois neveux de Donald ?","Riri, Fifi et Loulou","En anglais, ils s'appellent Huey, Dewey et Louie.",["Tic et Tac","Pim, Pam et Poum","Pif et Hercule"]),
+("","Comment s'appellent les trois neveux de Donald ?","Riri, Fifi et Loulou","En anglais, ils s'appellent Huey, Dewey et Louie.",["Tic et Tac","Pim, Pam et Poum","Pif et Hercule"]),
 ("personnages","Comment s'appelle le pantin de bois dont le nez s'allonge quand il ment ?","Pinocchio","Il a été imaginé par l'écrivain italien Carlo Collodi en 1881."),
 ("personnages","Comment s'appelle la petite fée de « Peter Pan » ?","la fée Clochette","En anglais, elle s'appelle Tinker Bell.",["la fée Carabosse","la fée Morgane","la fée Marraine"]),
 ("personnages","Comment s'appelle le pirate ennemi de Peter Pan ?","le capitaine Crochet","Il a perdu une main, dévorée par un crocodile.",["Barbe-Noire","Jack Sparrow","le capitaine Fracasse"]),
@@ -45,7 +45,7 @@ Q = [
 ("personnages","Quel archéologue aventurier porte un fouet et un chapeau ?","Indiana Jones","Il est incarné au cinéma par Harrison Ford depuis 1981."),
 ("personnages","Comment s'appelle le jeune sorcier à lunettes qui a une cicatrice en forme d'éclair ?","Harry Potter","La saga compte sept romans."),
 ("personnages","Quel agent secret britannique porte le matricule 007 ?","James Bond","Il a été créé par l'écrivain Ian Fleming en 1953."),
-("personnages","Comment s'appellent les petites créatures jaunes à lunettes au service de Gru ?","les Minions","Ils parlent un charabia qui mélange plusieurs langues.",["les Schtroumpfs","les Lapins crétins","les Oompa-Loompa"]),
+("","Comment s'appellent les petites créatures jaunes à lunettes au service de Gru ?","les Minions","Ils parlent un charabia qui mélange plusieurs langues.",["les Schtroumpfs","les Lapins crétins","les Oompa-Loompa"]),
 # --- Films
 ("films","Dans quel film un paquebot heurte-t-il un iceberg ?","Titanic","Le film a remporté 11 Oscars en 1998."),
 ("films","Dans quel film un extraterrestre veut-il « téléphoner maison » ?","E.T. l'extra-terrestre","Le vélo d'Elliott s'envole devant la pleine lune dans une scène devenue célèbre."),

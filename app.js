@@ -48,7 +48,7 @@ function pick(th){
 function mkOpts(q){
   let w=[];
   if(q.w&&q.w.length>=3)w=shuf(q.w).slice(0,3);
-  else if(q.yr&&/^\d+$/.test(q.a)){const s=new Set();while(s.size<3){const o=+q.a+(Math.random()*40-20|0);if(o>0&&String(o)!=q.a)s.add(String(o))}w=[...s]}
+  else if(q.yr&&/^\d+$/.test(q.a)){const s=new Set(),max=new Date().getFullYear();while(s.size<3){const o=+q.a+(Math.random()*40-20|0);if(o>0&&o<=max&&String(o)!=q.a)s.add(String(o))}w=[...s]}   /* années proches, jamais dans le futur */
   else{
     const seen=new Set([q.a]);
     for(const pool of [Q.filter(x=>x.g&&x.g==q.g),Q.filter(x=>x.th==q.th),Q]){
