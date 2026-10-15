@@ -157,7 +157,7 @@ Q = [
 ("personnages","Comment s'appelle le général sud-américain ami de Tintin, rival du général Tapioca ?","le général Alcazar","Il dirige la République de San Theodoros."),
 ("personnages","Comment s'appelle l'assureur envahissant des aventures de Tintin ?","Séraphin Lampion","Il travaille pour la compagnie Mondass."),
 ("personnages","Comment s'appelle le doyen du village d'Astérix ?","Agecanonix","Il a épousé une jeune femme bien plus jeune que lui."),
-("personnages","Comment s'appelle l'épouse du chef Abraracourcix ?","Bonemine","Elle est originaire de Lutèce."),
+("personnages","Comment s'appelle l'épouse du chef Abraracourcix ?","Bonemine","Elle n'hésite pas à tenir tête à son mari."),
 ("personnages","Comment s'appelle le journaliste ami de Spirou ?","Fantasio","Il est aussi le patron de Gaston Lagaffe."),
 ("personnages","Comment s'appelle l'écureuil de Spirou ?","Spip","Ses pensées sont souvent ironiques."),
 ("personnages","Comment s'appelle le savant fou ennemi de Sonic ?","le docteur Robotnik","On l'appelle aussi Eggman."),

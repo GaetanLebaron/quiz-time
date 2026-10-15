@@ -7,7 +7,7 @@ Q = [
 ("ecrivains","Qui a écrit « Manon Lescaut » ?","l'abbé Prévost","Le roman a inspiré des opéras à Massenet et Puccini."),
 ("ecrivains","Qui a écrit « Paul et Virginie » ?","Bernardin de Saint-Pierre","L'histoire se déroule à l'île Maurice."),
 ("ecrivains","Qui a écrit les « Mémoires d'outre-tombe » ?","Chateaubriand","Il est enterré sur un îlot face à Saint-Malo."),
-("ecrivains","Qui a écrit « Adolphe » ?","Benjamin Constant","Le roman s'inspire de sa liaison avec Madame de Staël."),
+("ecrivains","Qui a écrit « Adolphe » ?","Benjamin Constant","Ce court roman d'analyse est paru en 1816."),
 ("ecrivains","Qui a écrit « Les Chants de Maldoror » ?","Lautréamont","Les surréalistes l'ont considéré comme un précurseur."),
 ("ecrivains","Qui a écrit « À rebours » ?","Joris-Karl Huysmans","Son héros, des Esseintes, vit reclus parmi ses collections."),
 ("ecrivains","Qui a écrit « Nadja » ?","André Breton","Il a aussi rédigé le « Manifeste du surréalisme »."),
