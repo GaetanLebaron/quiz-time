@@ -155,7 +155,7 @@ Q = [
 ("dieux","Quelle déesse grecque des moissons est la mère de Perséphone ?","Déméter","Son chagrin expliquerait l'arrivée de l'hiver."),
 ("dieux","Quel titan est condamné à porter la voûte du ciel sur ses épaules ?","Atlas","Un recueil de cartes porte son nom."),
 ("dieux","Quel titan a volé le feu des dieux pour le donner aux hommes ?","Prométhée","Pour le punir, Zeus l'a enchaîné à un rocher."),
-("dieux","Quel est le nom romain de Zeus ?","Jupiter","La plus grande planète porte son nom."),
+("","Quel est le nom romain de Zeus ?","Jupiter","La plus grande planète porte son nom.",["Saturne","Mars","Apollon"]),
 ("dieux","Quel dieu égyptien à tête de chacal veille sur les morts ?","Anubis","Il présidait à l'embaumement."),
 ("dieux","Quel est le dieu égyptien du Soleil ?","Râ","Il traversait le ciel chaque jour dans une barque."),
 ("dieux","Quel dieu nordique, borgne, est le père de Thor ?","Odin","Il a sacrifié un œil pour obtenir la sagesse."),
