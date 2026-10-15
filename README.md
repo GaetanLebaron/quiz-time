@@ -25,6 +25,7 @@ Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt 
 1. Ouvre l'adresse du site sur la **TV** : un QR code s'affiche.
 2. Scanne-le avec le **smartphone** du Maître du Jeu : l'écran de configuration s'ouvre (équipes, tours, niveau, timer).
 3. Lance la partie depuis le téléphone.
+4. Pour chaque question, l'équipe peut répondre directement (5 points). Sinon, affiche les 4 propositions : touche sur le téléphone la proposition donnée par l'équipe, puis **Valider** (3 points si elle est juste, 1 point après un 50/50). La TV montre la bonne réponse et, si elle est fausse, la proposition choisie.
 
 Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'accueil (« Ajouter à l'écran d'accueil » dans le menu du navigateur), l'icône rouvre directement la télécommande. Pour utiliser un appareil comme écran TV à la place, ouvre `adresse-du-site/?tv`, ou touche le lien « Utiliser cet appareil comme écran TV » en bas de l'écran de configuration.
 
@@ -55,7 +56,7 @@ Les parties sont conservées dans le navigateur de la TV (les 10 dernières). Ut
 
 ## Si le téléphone reste sur « Écran TV : en recherche »
 
-L'écran d'attente affiche le **code de l'écran** (4 derniers caractères) sur la TV comme sur le téléphone, et l'état des envois.
+Sur la TV comme sur le téléphone, touche **« Détails de connexion »** (replié par défaut pour ne pas encombrer l'écran des joueurs ; un ⚠ s'y ajoute en cas de problème d'envoi) pour voir le **code de l'écran** (4 derniers caractères) et l'état des envois.
 
 - **Codes différents :** le téléphone a mémorisé un autre écran. Touche « Scanner le QR code d'un autre écran », puis scanne le QR code de la TV.
 - **« service saturé (429) » :** le service gratuit ntfy.sh limite le nombre de requêtes par connexion Internet (TV et téléphone sur le même Wi-Fi comptent ensemble). Le plus efficace : passer le téléphone en données mobiles (Wi-Fi coupé), il a alors sa propre limite. Sinon, ferme les pages Quiz Time inutiles et patiente 2 minutes. Aucun message n'est perdu : la TV comme le téléphone renvoient automatiquement chaque message refusé, dans l'ordre, avec une attente croissante (5 s, 10 s… jusqu'à 60 s). Le motif exact donné par le service s'affiche entre guillemets (par exemple « limit reached: too many requests »).

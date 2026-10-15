@@ -46,6 +46,16 @@ text-shadow:0 0 4px color-mix(in srgb,var(--c) 45%,transparent);box-shadow:0 0 8
 .opt{border:1.5px solid var(--line);border-radius:12px;padding:14px;background:#120c34;font-weight:500;transition:opacity .3s}
 .opt.ok{border-color:var(--green);color:var(--green);box-shadow:0 0 8px -3px var(--green)}
 .opt.off{opacity:.12;text-decoration:line-through}
+.opt.bad{border-color:var(--pink);color:var(--pink);box-shadow:0 0 8px -3px var(--pink)}
+/* Télécommande : propositions à toucher */
+.opt.pk{font:inherit;font-weight:500;color:var(--ink);text-align:left;cursor:pointer;width:100%}
+.opt.pk.sel{border-color:var(--cyan);background:#1d1650;box-shadow:0 0 0 2px var(--cyan)}
+.opt.pk:disabled{cursor:default}
+.hint{margin:0;text-align:center}
+/* Détails de connexion (accordéon) */
+.diag{width:100%;max-width:44rem;color:var(--mut);font-size:.85rem}
+.diag summary{cursor:pointer;text-align:center;padding:.3rem;list-style-position:inside}
+.diag .st{margin:.5rem 0}
 .acts{display:grid;gap:12px}
 .anec{border-left:4px solid var(--pink);background:rgba(255,60,172,.08);border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:20px}
 .anec p{margin:4px 0 0;color:var(--ink)}.anec b{color:var(--pink)}
