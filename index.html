@@ -74,6 +74,19 @@ body.tv .grid{grid-template-columns:1fr 360px}body.tv .q{font-size:clamp(2rem,4.
 .res.bad{color:var(--pink);border:2px solid var(--pink);background:rgba(255,60,172,.1);animation:shake .5s}
 @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes shake{20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+
+body.tv header{display:none}
+.tvwait .hero{margin-bottom:30px}
+.tvhead{display:flex;align-items:center;justify-content:space-between;gap:28px;margin-bottom:22px;flex-wrap:wrap}
+.tvhead .brand{font-size:2.3rem}
+.tvtour{display:grid;gap:8px;color:var(--mut);font-size:1.1rem}
+.tvscore{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;flex:1}
+.chip{display:flex;gap:10px;align-items:center;padding:8px 14px;border:1.5px solid var(--line);border-radius:12px;background:#120c34}
+.chip.cur{border-color:var(--cyan);box-shadow:0 0 8px -4px var(--cyan)}
+.chip b{font-size:1.6rem;color:var(--cyan)}.chip .rk{color:var(--mut)}
+body.tv .q{font-size:clamp(2.2rem,4.8vw,4.2rem);max-width:none}
+body.tv .opts{gap:16px}
+body.tv .opt{font-size:clamp(1.7rem,3.2vw,2.8rem);padding:26px 30px;line-height:1.2}
 </style>
 </head>
 <body>
@@ -152,6 +165,7 @@ function onCmd(m){
   if(m.t=='start')startGame(m.cfg||{});
   else if(m.t=='replay'||m.t=='pause'){saveS();S=null;scr='cfgd';lsSet(CK,null)}
   else if(m.t=='resume'){const g=findG(m.p);if(g&&g.scr!='end'){saveS();restore(g)}}
+  else if(S&&m.t=='finish'&&scr=='game'){scr='end'}
   else if(m.t=='del'){lsSet(GK,(lsGet(GK)||[]).filter(g=>g.id!=m.p))}
   else if(S&&m.t=='show'&&S.phase=='q'){S.opts=mkOpts(S.q);S.phase='m'}
   else if(S&&m.t=='fifty'&&S.phase=='m'){S.hid=shuf(S.opts.filter(o=>o!=S.q.a)).slice(0,2);S.phase='f'}
@@ -257,10 +271,17 @@ function tvWait(){
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible : bibliothèque non chargée. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}${err?`<p class="st" style="color:var(--pink)">${esc(err)}</p>`:''}<p class="url">${esc(joinUrl)}</p></div>`;
 }
+function tvTop(st){
+  const dots=Array.from({length:st.rounds},(_,i)=>`<i class="${i<st.round?'d':i==st.round?'c':''}"></i>`).join('');
+  const r=st.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.s-a.s||a.i-b.i);
+  const chips=r.map((t,k)=>`<div class="chip ${t.i==st.ti?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><b>${t.s}</b></div>`).join('');
+  return `<div class="tvhead"><div class="brand">Quiz <span>Time</span></div><div class="tvtour"><span>Tour ${st.round+1} / ${st.rounds}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
+}
 function tvGame(st){
-  const q=st.q,r=st.phase=='r';
-  return `<div class="grid"><main>${head(st)}<section class="card"><p class="lvl">Niveau ${q.l} · ${LV[q.l-1]}</p><h2 class="q">${esc(q.q)}</h2>${optsHTML(st,r)}
-  ${r?`${verdict(st)}<div class="anec"><b>Réponse : ${esc(q.a)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`:''}</section></main>${board({...st,i0:st.ti},true)}</div>`;
+  const q=st.q,r=st.phase=='r',th=THEMES[st.th];
+  return `${tvTop(st)}<div class="ctx"><div class="who"><span>Au tour de</span>${esc(st.teams[st.ti].n)}</div><div class="theme" style="--c:${th.c}">${th.e} ${th.n}</div></div>
+  <section class="card"><p class="lvl">Niveau ${q.l} · ${LV[q.l-1]}</p><h2 class="q">${esc(q.q)}</h2>${optsHTML(st,r)}
+  ${r?`${verdict(st)}<div class="anec"><b>Réponse : ${esc(q.a)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`:''}</section>`;
 }
 function ctlGame(st){
   const q=st.q,B=(c,t,a)=>`<button class="btn ${c} big" onclick="${a}">${t}</button>`;
@@ -270,7 +291,7 @@ function ctlGame(st){
   else if(st.phase=='f')b=B('green','Bonne réponse (1 pt)',"cmd('ans',1)")+B('pink','Mauvaise réponse (0 pt)',"cmd('ans',0)");
   else b=`<div class="anec"><b>${st.pts?'+'+plural(st.pts,'point'):'0 point'} pour ${esc(st.teams[st.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',st.last?'Voir le classement final':'Question suivante',"cmd('next')");
   return `<div class="grid"><main>${head(st)}<section class="card"><p class="lvl">Niveau ${q.l} · ${LV[q.l-1]}</p><h2 class="q">${esc(q.q)}</h2>
-  <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${optsHTML(st,true)}<div class="acts">${b}</div></section><button class="btn mut" style="margin-top:14px" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button></main>${board({...st,i0:st.ti},true)}</div>`;
+  <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${optsHTML(st,true)}<div class="acts">${b}</div></section><div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...st,i0:st.ti},true)}</div>`;
 }
 function render(){
   $('#meta').textContent='';
