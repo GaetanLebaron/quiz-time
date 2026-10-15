@@ -23,7 +23,7 @@ else if(P.has('tv')){rawDel('qt-join');try{history.replaceState(null,'',location
 else if(okId(P.get('join'))){JOIN=P.get('join');rawSet('qt-join',JOIN)}
 else if(okId(rawGet('qt-join')))JOIN=rawGet('qt-join');
 const TV=!JOIN&&!SCAN;
-document.body.classList.toggle('tv',TV);
+document.body.classList.toggle('tv',TV);document.documentElement.classList.toggle('tv',TV);   /* html.tv : taille de base adaptée à l'écran (style.css) */
 
 /* ---------- État ---------- */
 let THEMES=[],LV=[],Q=[],QMAP=new Map();
@@ -377,7 +377,7 @@ function connHelp(){
   return `<div class="anec"><b>${esc(titre)}</b><p>${esc(texte)}</p></div><button class="btn big" onclick="hello();retryNow();pollNow()">Relancer</button>`;
 }
 const qrURL=(n)=>{try{const q=qrcode(0,'M');q.addData(joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
-const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:16px"><img alt="QR code" style="width:110px;border-radius:8px;background:#fff;padding:6px" src="${qrURL(6)}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.</span></div>`;
+const lostBar=()=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem"><img alt="QR code" style="width:7rem;border-radius:.5rem;background:#fff;padding:.4rem" src="${qrURL(6)}"><span>Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.</span></div>`;
 function tvWait(){
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';

@@ -1,7 +1,7 @@
 /* Service worker de Quiz Time : permet l'installation (PWA) et un démarrage rapide.
    Stratégie « réseau d'abord » : les mises à jour du site sont prises en compte tout de suite,
    et les fichiers en cache ne servent que si le réseau est indisponible. */
-const CACHE='quiz-time-v11';
+const CACHE='quiz-time-v12';
 const SHELL=['./','index.html','style.css','app.js','questions.json','qrcode.js','manifest.webmanifest','icon-192.png','icon-512.png'];
 
 self.addEventListener('install',e=>{
