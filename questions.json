@@ -2172,7 +2172,7 @@
  {"theme":3,"niveau":2,"groupe":"dieux","question":"Quelle déesse grecque des moissons est la mère de Perséphone ?","reponse":"Déméter","anecdote":"Son chagrin expliquerait l'arrivée de l'hiver."},
  {"theme":3,"niveau":2,"groupe":"dieux","question":"Quel titan est condamné à porter la voûte du ciel sur ses épaules ?","reponse":"Atlas","anecdote":"Un recueil de cartes porte son nom."},
  {"theme":3,"niveau":2,"groupe":"dieux","question":"Quel titan a volé le feu des dieux pour le donner aux hommes ?","reponse":"Prométhée","anecdote":"Pour le punir, Zeus l'a enchaîné à un rocher."},
- {"theme":3,"niveau":2,"groupe":"dieux","question":"Quel est le nom romain de Zeus ?","reponse":"Jupiter","anecdote":"La plus grande planète porte son nom."},
+ {"theme":3,"niveau":2,"groupe":"","question":"Quel est le nom romain de Zeus ?","reponse":"Jupiter","anecdote":"La plus grande planète porte son nom.","fausses":["Saturne","Mars","Apollon"]},
  {"theme":3,"niveau":2,"groupe":"dieux","question":"Quel dieu égyptien à tête de chacal veille sur les morts ?","reponse":"Anubis","anecdote":"Il présidait à l'embaumement."},
  {"theme":3,"niveau":2,"groupe":"dieux","question":"Quel est le dieu égyptien du Soleil ?","reponse":"Râ","anecdote":"Il traversait le ciel chaque jour dans une barque."},
  {"theme":3,"niveau":2,"groupe":"dieux","question":"Quel dieu nordique, borgne, est le père de Thor ?","reponse":"Odin","anecdote":"Il a sacrifié un œil pour obtenir la sagesse."},
