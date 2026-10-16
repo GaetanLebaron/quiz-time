@@ -420,22 +420,19 @@ function teamOverlay(){
   /* Crescendo : au début de la partie et à chaque passage au niveau supérieur, l'animation annonce le niveau. */
   const L=curLv(),up=S.lvl&&S.ti==0&&(S.round==0||S.lvl[S.round-1]!=L);
   const d=document.createElement('div');d.className='ovl';
-  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span>${avatar(S.teams[S.ti],S.ti)}<b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
+  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
   document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);
 }
 
-/* ---------- Habillage « jeu » : couleur de chaque équipe, formes et couleurs des propositions ---------- */
-const TCOL=['#ff8a3d','#3dd6f5','#ff5c9a','#a3e635','#b98cff','#ffc23d','#2fd38a','#5b8cff'];
-/* Initiale du dernier mot : « Les Cerveaux » → C, « Équipe 2 » → 2 */
-const avatar=(t,i)=>`<span class="av" style="--c:${TCOL[i%TCOL.length]}">${esc(([...(String(t.n).trim().split(/\s+/).pop()||'?')][0]||'?').toUpperCase())}</span>`;
+/* ---------- Habillage « jeu » : icônes et propositions ---------- */
 const SV=d=>`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-const SHAPES=[SV('<path d="M12 4 21 19.5H3z"/>'),SV('<path d="M12 2.5 21.5 12 12 21.5 2.5 12z" class="fill"/>'),SV('<circle cx="12" cy="12" r="8.5"/>'),SV('<rect x="4" y="4" width="16" height="16" rx="2"/>')];
 const ICO={ok:SV('<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>'),no:SV('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
   bulb:SV('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>'),
   star:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>'};
-/* Une proposition : st = '' (en jeu), 'ok' (bonne réponse révélée), 'bad' (réponse fausse donnée), 'no' (autre proposition révélée), 'off' (retirée par le 50/50). */
+/* Une proposition : sa lettre dans le carré de gauche. st = '' (en jeu), 'ok' (bonne réponse révélée, ✓),
+   'bad' (réponse fausse donnée, ✕), 'no' (autre proposition révélée), 'off' (retirée par le 50/50). Les couleurs vert et rouge sont réservées à ok et bad. */
 function tile(o,i,st,tag,pick){
-  const inner=`<span class="sh">${st=='ok'?ICO.ok:st=='bad'||st=='no'?ICO.no:SHAPES[i%4]}</span><span class="ot">${esc(o)}</span>${tag?`<span class="otag">${tag}</span>`:`<span class="ol">${'ABCD'[i]||''}</span>`}`;
+  const inner=`<span class="sh">${st=='ok'?ICO.ok:st=='bad'?ICO.no:'ABCD'[i]||''}</span><span class="ot">${esc(o)}</span>${tag?`<span class="otag">${tag}</span>`:''}`;
   return pick?`<button class="opt pk c${i} ${st} ${sel==i?'sel':''}" ${st=='off'?'disabled':''} onclick="sel=${i};render()">${inner}</button>`:`<div class="opt c${i} ${st}">${inner}</div>`;
 }
 /* Étoile à pointes du résultat (« +3 ») */
@@ -493,7 +490,7 @@ function savedHTML(){
 }
 function board(s,cur){
   const r=s.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.s-a.s||a.i-b.i);
-  return `<aside class="card score"><h3>Classement</h3><ol>${r.map((t,k)=>`<li class="${cur&&t.i==s.i0?'cur':''}"><span class="rk">${k+1}</span>${avatar(t,t.i)}<span class="nm">${esc(t.n)}</span><span class="pt">${t.s}</span></li>`).join('')}</ol></aside>`;
+  return `<aside class="card score"><h3>Classement</h3><ol>${r.map((t,k)=>`<li class="${cur&&t.i==s.i0?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><span class="pt">${t.s}</span></li>`).join('')}</ol></aside>`;
 }
 function head(s){
   const th=THEMES[s.th],dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
@@ -555,7 +552,7 @@ function tvWait(){
 /* Bandeau du haut : tour en cours (une étoile par tour, jusqu'à 12 tours) et équipes, celle qui joue en orange. */
 function tvTop(s){
   const stars=s.rounds<=12?`<span class="stars">${Array.from({length:s.rounds},(_,i)=>`<i class="${i<=s.round?'on':''}">${ICO.star}</i>`).join('')}</span>`:'';
-  const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}${avatar(t,i)}<span class="cn"><span class="nm">${esc(t.n)}</span><b>${t.s}<small> pts</small></b></span></div>`).join('');
+  const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
   return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span>${stars}</div><div class="tvscore">${chips}</div></div>`;
 }
 function tvRules(){
