@@ -180,7 +180,8 @@ body.tv .opts{gap:1.5rem 1.8rem;margin:0}
 body.tv .opt{font-size:1.9rem;padding:1rem 1.3rem;gap:1.2rem;border-width:.2rem;border-radius:1.3rem;box-shadow:0 .4rem 0 var(--drop)}
 body.tv .opt.ok{box-shadow:0 0 0 .3rem var(--edge),0 .6rem 0 var(--drop)}
 body.tv .opt.ok .sh{border-width:.18rem}
-body.tv .opt .ot{overflow-wrap:break-word;hyphens:auto}   /* réponse longue : coupure entre les mots (ou avec un trait d'union), jamais au milieu sans tiret */
+body.tv .opt .ot{overflow-wrap:break-word;hyphens:auto}
+body.tv .opt .otag{white-space:normal;width:min-content;text-align:center;line-height:1.1}   /* « Bonne réponse » sur deux lignes : plus de place pour la réponse */   /* réponse longue : coupure entre les mots (ou avec un trait d'union), jamais au milieu sans tiret */
 /* Réponse révélée : points marqués et « Le saviez-vous ? » sur la même ligne */
 .rrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:1.8rem;margin-top:1.8rem;align-items:stretch}
 .rrow.solo{grid-template-columns:minmax(0,1fr)}
