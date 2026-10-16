@@ -5,7 +5,6 @@ const BASE=window.QT_BASE||'https://ntfy.sh/';   /* QT_BASE : autre serveur ntfy
 const OVL_MS=2000;   /* durée de l'animation de changement d'équipe */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const cap=s=>{s=String(s);return s.charAt(0).toUpperCase()+s.slice(1)};   /* propositions : « le Nil » s'affiche « Le Nil » */
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const plural=(n,w)=>n+' '+w+(n>1?'s':'');
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
@@ -449,13 +448,13 @@ function head(s){
 /* mark : montre la bonne réponse (✓) et, une fois la réponse donnée, la proposition choisie si elle est fausse (✗). */
 function optsHTML(s,mark){
   const bad=o=>mark&&s.phase=='r'&&s.pick==o&&o!=s.q.a;
-  return s.opts?`<div class="opts">${s.opts.map((o,i)=>`<div class="opt ${mark&&o==s.q.a?'ok':''} ${bad(o)?'bad':''} ${s.hid.includes(o)?'off':''}">${esc(cap(o))}${mark&&o==s.q.a?' ✓':bad(o)?' ✗':''}</div>`).join('')}</div>`:'';
+  return s.opts?`<div class="opts">${s.opts.map((o,i)=>`<div class="opt ${mark&&o==s.q.a?'ok':''} ${bad(o)?'bad':''} ${s.hid.includes(o)?'off':''}">${esc(o)}${mark&&o==s.q.a?' ✓':bad(o)?' ✗':''}</div>`).join('')}</div>`:'';
 }
 /* Télécommande : le Maître du Jeu touche la proposition donnée par l'équipe, puis valide. */
 let sel=null,selKey='';
 function pickHTML(s){
   return `<div class="opts">${s.opts.map((o,i)=>{const off=s.hid.includes(o);
-    return `<button class="opt pk ${o==s.q.a?'ok':''} ${sel==i?'sel':''} ${off?'off':''}" ${off?'disabled':''} onclick="sel=${i};render()">${esc(cap(o))}${o==s.q.a?' ✓':''}</button>`}).join('')}</div>`;
+    return `<button class="opt pk ${o==s.q.a?'ok':''} ${sel==i?'sel':''} ${off?'off':''}" ${off?'disabled':''} onclick="sel=${i};render()">${esc(o)}${o==s.q.a?' ✓':''}</button>`}).join('')}</div>`;
 }
 const answer=c=>{sel=null;say({t:'ans',c})};   /* c (choix), pas o : o est réservé à l'offre WebRTC */
 const verdict=s=>s.pts?`<div class="res good">Bonne réponse ! +${plural(s.pts,'point')}</div>`:`<div class="res bad">Mauvaise réponse · c'était : ${esc(s.q.a)}</div>`;
@@ -509,7 +508,7 @@ function ctlGame(s){
     if(sel!=null&&s.hid.includes(s.opts[sel]))sel=null;
     const o=sel!=null?s.opts[sel]:null,pts=s.phase=='m'?3:1;
     b=(o==null?'<p class="sub hint">Touchez la proposition donnée par l\'équipe, puis validez.</p>'
-      :B(o==q.a?'green':'pink',`Valider « ${esc(cap(o))} » (${o==q.a?plural(pts,'pt'):'0 pt'})`,`answer(st.opts[${sel}])`))
+      :B(o==q.a?'green':'pink',`Valider « ${esc(o)} » (${o==q.a?plural(pts,'pt'):'0 pt'})`,`answer(st.opts[${sel}])`))
       +(s.phase=='m'?B('','50/50',"cmd('fifty')"):'')+B('mut','Pas de réponse (0 pt)','answer(null)');
   }
   else b=`<div class="anec"><b>${s.pts?'+'+plural(s.pts,'point'):'0 point'} pour ${esc(s.teams[s.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',s.last?'Voir le classement final':'Question suivante',"cmd('next')");

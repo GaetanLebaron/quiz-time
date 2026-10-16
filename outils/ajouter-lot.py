@@ -2,7 +2,8 @@
 Usage : python3 outils/ajouter-lot.py outils/lots/geo-1.py [--dry]
 Vérifie : champs, doublons (avec la banque existante et dans le lot), fausses propositions
 (au moins 3, distinctes de la réponse), groupes ayant au moins 4 réponses différentes,
-réponses numériques pour les groupes déclarés dans ANNEES."""
+réponses numériques pour les groupes déclarés dans ANNEES.
+Met une majuscule au début des réponses et des fausses propositions (sauf MINUSCULE)."""
 import json,sys,re,unicodedata,collections,runpy
 lot=runpy.run_path(sys.argv[1]);dry='--dry' in sys.argv
 TH,NV,Q=lot['THEME'],lot['NIVEAU'],lot['Q']
@@ -11,8 +12,11 @@ d=json.load(open('questions.json',encoding='utf-8'))
 norm=lambda t:re.sub(r'[^a-z0-9]','',unicodedata.normalize('NFD',t.lower()).encode('ascii','ignore').decode())
 seen={norm(x['question']):x['question'] for x in d['questions']}
 err=[];new=[]
+MINUSCULE={'a-ha'}   # réponses qui gardent leur minuscule initiale (noms propres stylisés)
+cap=lambda t:t if t in MINUSCULE or not t[:1].islower() else t[0].upper()+t[1:]   # « le Nil » devient « Le Nil »
 for i,e in enumerate(Q):
     g,q,a,f=e[:4];fa=e[4] if len(e)>4 else None
+    a=cap(a);fa=[cap(t) for t in fa] if fa is not None else None
     if not q.strip().endswith('?'):err.append(f'#{i} pas de « ? » : {q}')
     if not a or not f:err.append(f'#{i} réponse ou anecdote vide : {q}')
     k=norm(q)
