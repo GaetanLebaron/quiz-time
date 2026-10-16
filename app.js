@@ -427,8 +427,7 @@ function teamOverlay(){
 /* ---------- Habillage « jeu » : icônes et propositions ---------- */
 const SV=d=>`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const ICO={ok:SV('<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>'),no:SV('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
-  bulb:SV('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>'),
-  star:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>'};
+  bulb:SV('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>')};
 /* Une proposition : sa lettre dans le carré de gauche. st = '' (en jeu), 'ok' (bonne réponse révélée, ✓),
    'bad' (réponse fausse donnée, ✕), 'no' (autre proposition révélée), 'off' (retirée par le 50/50). Les couleurs vert et rouge sont réservées à ok et bad. */
 function tile(o,i,st,tag,pick){
@@ -549,11 +548,10 @@ function tvWait(){
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}<p class="url">${esc(joinUrl)}</p></div>`;
 }
-/* Bandeau du haut : tour en cours (une étoile par tour, jusqu'à 12 tours) et équipes, celle qui joue en orange. */
+/* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
 function tvTop(s){
-  const stars=s.rounds<=12?`<span class="stars">${Array.from({length:s.rounds},(_,i)=>`<i class="${i<=s.round?'on':''}">${ICO.star}</i>`).join('')}</span>`:'';
   const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
-  return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span>${stars}</div><div class="tvscore">${chips}</div></div>`;
+  return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span></div><div class="tvscore">${chips}</div></div>`;
 }
 function tvRules(){
   const P=(t,d,x)=>`<div class="rpt"><b>${t}</b><span><strong>${d}</strong> ${x}</span></div>`;
