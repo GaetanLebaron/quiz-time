@@ -420,7 +420,7 @@ function teamOverlay(){
   /* Crescendo : au début de la partie et à chaque passage au niveau supérieur, l'animation annonce le niveau. */
   const L=curLv(),up=S.lvl&&S.ti==0&&(S.round==0||S.lvl[S.round-1]!=L);
   const d=document.createElement('div');d.className='ovl';
-  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
+  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${thIco(S.themes[S.round])}${esc(th.n)}</i></div>`;
   document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);
 }
 
@@ -428,6 +428,17 @@ function teamOverlay(){
 const SV=d=>`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const ICO={ok:SV('<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>'),no:SV('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
   bulb:SV('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>')};
+/* Icônes des thèmes, dans le même style au trait que l'ampoule. Dans l'ordre des thèmes de questions.json :
+   Géographie, Divertissements, Histoire, Arts et Littérature, Sciences et Nature, Sports et Loisirs. Un thème ajouté sans icône garde son émoji. */
+const TICO=[
+  '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>',
+  '<path d="M4 11v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8zM4 11l-.8-3.2a2 2 0 0 1 1.4-2.4l11.6-3.1a2 2 0 0 1 2.4 1.4l.8 3.3zM7.2 4.8l3 3.7M12.6 3.4l3 3.7"/>',
+  '<path d="M3 21h18M5 18v-8M9.7 18v-8M14.3 18v-8M19 18v-8M3 10h18L12 3.5z"/>',
+  '<path d="M12 21a9 9 0 1 1 9-9c0 2.5-2 3.6-4 3.6h-1.6a1.8 1.8 0 0 0-1.4 2.9A1.6 1.6 0 0 1 12 21z"/><circle cx="7.8" cy="11" r="1.1" class="fill"/><circle cx="10.6" cy="7.2" r="1.1" class="fill"/><circle cx="15.2" cy="7.6" r="1.1" class="fill"/>',
+  '<path d="M9 3h6M10 3v6.3L4.6 18.7A1.5 1.5 0 0 0 5.9 21h12.2a1.5 1.5 0 0 0 1.3-2.3L14 9.3V3M7 15h10"/>',
+  '<path d="M8 21h8M12 16.5V21M7 4h10v5a5 5 0 0 1-10 0zM7 6H4.5a3 3 0 0 0 2.8 4M17 6h2.5a3 3 0 0 1-2.8 4"/>'];
+const thIco=i=>TICO[i]?`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TICO[i]}</svg>`:esc(THEMES[i]?THEMES[i].e:'');
+
 /* Une proposition : sa lettre dans le carré de gauche. st = '' (en jeu), 'ok' (bonne réponse révélée, ✓),
    'bad' (réponse fausse donnée, ✕), 'no' (autre proposition révélée), 'off' (retirée par le 50/50). Les couleurs vert et rouge sont réservées à ok et bad. */
 function tile(o,i,st,tag,pick){
@@ -494,21 +505,21 @@ function board(s,cur){
 function head(s){
   const th=THEMES[s.th];   /* même pastille « TOUR x/y » que sur la TV, sans étoiles : elle tient quelle que soit la durée de la partie */
   return `<div class="pill ph">Tour ${s.round+1}<span>/${s.rounds}</span></div>
-  <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>`;
+  <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${thIco(s.th)}${esc(th.n)}</div></div>`;
 }
 /* Propositions. Une fois la réponse donnée (phase r) : la bonne en vert, la réponse fausse choisie en rouge, les autres en retrait.
    Réponse directe (sans propositions) : la bonne réponse s'affiche seule. */
 function optsHTML(s){
   const r=s.phase=='r';
   if(!s.opts)return r?`<div class="opts one">${tile(s.q.a,0,'ok','Bonne réponse')}</div>`:'';
-  return `<div class="opts">${s.opts.map((o,i)=>{
+  return `<div class="opts" style="--th:${THEMES[s.th].c}">${s.opts.map((o,i)=>{
     const st=r?(o==s.q.a?'ok':o==s.pick?'bad':s.hid.includes(o)?'off':'no'):s.hid.includes(o)?'off':'';
     return tile(o,i,st,st=='ok'?'Bonne réponse':st=='bad'?'Réponse donnée':'')}).join('')}</div>`;
 }
 /* Télécommande : le Maître du Jeu touche la proposition donnée par l'équipe, puis valide. */
 let sel=null,selKey='';
 function pickHTML(s){
-  return `<div class="opts">${s.opts.map((o,i)=>tile(o==s.q.a?o+' ✓':o,i,s.hid.includes(o)?'off':'','',true)).join('')}</div>`;
+  return `<div class="opts" style="--th:${THEMES[s.th].c}">${s.opts.map((o,i)=>tile(o==s.q.a?o+' ✓':o,i,s.hid.includes(o)?'off':'','',true)).join('')}</div>`;
 }
 const answer=c=>{sel=null;say({t:'ans',c})};   /* c (choix), pas o : o est réservé à l'offre WebRTC */
 /* Écran TV, réponse révélée : points marqués et « Le saviez-vous ? » sur la même ligne */
@@ -559,7 +570,7 @@ function tvRules(){
   <p class="rintro">Bienvenue dans Quiz Time ! Formez vos équipes, échauffez vos neurones : six thèmes de culture générale vous attendent.</p>
   <div class="rgrid"><div class="rcol">
   <section class="card"><h3>Le principe</h3><p>La partie se joue en plusieurs tours. À chaque tour, chaque équipe reçoit une question, à tour de rôle. Le thème change à chaque tour, parmi :</p>
-    <div class="rth">${THEMES.map(t=>`<span style="--c:${t.c}">${t.e} ${esc(t.n)}</span>`).join('')}</div></section>
+    <div class="rth">${THEMES.map((t,i)=>`<span style="--c:${t.c}">${thIco(i)}${esc(t.n)}</span>`).join('')}</div></section>
   <section class="card"><h3>Le saviez-vous ?</h3><p>Après chaque question, le Maître du Jeu partage une petite anecdote. Ouvrez grand les oreilles : on ne sait jamais, elle pourrait vous servir un jour !</p></section>
   <section class="card"><h3>La fin de partie</h3><p>Après le dernier tour, l'équipe qui a le plus de points remporte la partie 🏆. En cas d'égalité, les équipes ex æquo se partagent la victoire.</p></section>
   </div><div class="rcol">
@@ -573,7 +584,7 @@ function tvRules(){
 }
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
-  const tag=`<span class="qtag" style="--c:${th.c}">${th.e} ${esc(th.n)}${s.cr?' · Niveau '+s.lv:''}</span>`;
+  const tag=`<span class="qtag" style="--c:${th.c}">${thIco(s.th)}${esc(th.n)}${s.cr?' · Niveau '+s.lv:''}</span>`;
   return `${tvTop(s)}<section class="qcard ${r?'mini':''}">${tag}<h2 class="q">${esc(q.q)}</h2>${tmrRing(s)}</section>${optsHTML(s)}${r?resultRow(s):''}`;
 }
 function ctlGame(s){
