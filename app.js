@@ -502,13 +502,13 @@ function tvGame(s){
 function ctlGame(s){
   const q=s.q,B=(c,t,a)=>`<button class="btn ${c} big" onclick="${a}">${t}</button>`;
   let b='';
-  if(s.phase=='q')b=B('green','Bonne réponse directe (5 pts)',"cmd('ans',5)")+B('pink','Mauvaise réponse (0 pt)',"cmd('ans',0)")+B('','Afficher les 4 propositions',"cmd('show')");
+  if(s.phase=='q')b=B('green','Bonne réponse directe',"cmd('ans',5)")+B('pink','Mauvaise réponse',"cmd('ans',0)")+B('','Afficher les 4 propositions',"cmd('show')");
   else if(s.phase=='m'||s.phase=='f'){
     const k=s.round+'-'+s.ti+'-'+s.phase;if(k!=selKey){selKey=k;sel=null}
     if(sel!=null&&s.hid.includes(s.opts[sel]))sel=null;
-    const o=sel!=null?s.opts[sel]:null,pts=s.phase=='m'?3:1;
+    const o=sel!=null?s.opts[sel]:null;
     b=(o==null?'<p class="sub hint">Touchez la proposition donnée par l\'équipe, puis validez.</p>'
-      :B(o==q.a?'green':'pink',`Valider « ${esc(o)} » (${o==q.a?plural(pts,'pt'):'0 pt'})`,`answer(st.opts[${sel}])`))
+      :B(o==q.a?'green':'pink',`Valider « ${esc(o)} »`,`answer(st.opts[${sel}])`))
       +(s.phase=='m'?B('','50/50',"cmd('fifty')"):'')+B('mut','Pas de réponse (0 pt)','answer(null)');
   }
   else b=`<div class="anec"><b>${s.pts?'+'+plural(s.pts,'point'):'0 point'} pour ${esc(s.teams[s.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',s.last?'Voir le classement final':'Question suivante',"cmd('next')");
