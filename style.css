@@ -129,9 +129,9 @@ body.tv .opt:not(.ok):not(.bad):not(.no) .sh{border-width:.18rem}
    ========================================================================== */
 html.tv{font-size:clamp(13px,min(2.05vw,1.95vh),52px)}
 /* Écran en paysage : la taille suit la largeur comme sur un écran 16:9 (1.1vw = 1.95vh en 16:9).
-   Certains navigateurs de TV annoncent une hauteur plus grande que la partie réellement affichée ;
-   sans cette limite, le texte grossit et le bas de l'écran est coupé. */
-@media(orientation:landscape){html.tv{font-size:clamp(13px,min(1.1vw,1.95vh),52px)}}
+   Plancher à 9px : l'appli Android TV affiche la page en 960×540 (écran 1080p à densité 2) ;
+   avec un plancher à 13px, tout y était 23 % trop gros et le bas de l'écran était coupé. */
+@media(orientation:landscape){html.tv{font-size:clamp(9px,min(1.1vw,1.95vh),52px)}}
 @media(max-height:500px){html.tv{font-size:clamp(11px,min(2.2vw,2.6vh),56px)}}
 body.tv{font-size:1.2rem;background-size:1.6rem 1.6rem,auto}
 /* Marge de sécurité d'environ 5 % sur chaque bord : beaucoup de TV rognent le pourtour de l'image (overscan). */
