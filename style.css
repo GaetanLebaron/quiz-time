@@ -294,3 +294,41 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
 .ti{flex:none;width:1.2em;height:1.2em;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .ti .fill{fill:currentColor;stroke:none}
 .ovl-in i{display:inline-flex;align-items:center;gap:.35em}
+
+/* ==========================================================================
+   Partie sans Maître du Jeu (libre.js) : téléphones des équipes et écran TV
+   ========================================================================== */
+.fstack{display:grid;gap:20px}
+.fgame .ctx{justify-content:flex-start}
+.fgame .ctx .pill.ph{margin:0}
+.fgame .acts input[type=text]{width:100%;font-size:1.2rem}
+.fgame .acts .opts{margin:0}
+.frl{margin:0 0 16px;padding-left:1.2rem;display:grid;gap:8px;line-height:1.35}
+.fme{font-family:var(--disp);font-size:2rem;color:var(--acc);margin:0 0 8px}
+.flb{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.flb li{background:var(--panel2);border:3px solid var(--edge);border-radius:12px;padding:6px 12px;font-weight:900}
+.fqr{padding:16px 20px}.fqr summary{cursor:pointer;font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em;color:var(--lav)}
+.fqr[open] summary{margin-bottom:14px}
+.fqrin{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.fqrin img{width:150px;flex:none;border-radius:12px;background:#fff;padding:8px;border:3px solid var(--edge)}
+.fqrin p{margin:0}
+/* Révélation : une carte par équipe, points à gauche */
+.fres{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.fr{display:flex;align-items:center;gap:12px;min-width:0;padding:10px 12px;border:3px solid var(--edge);border-radius:16px;background:var(--panel2)}
+.fr .fp{flex:none;display:grid;place-items:center;width:2.6em;height:2.6em;border-radius:12px;background:var(--edge);color:var(--mut);font-family:var(--disp);font-size:1.15rem}
+.fr.good .fp{background:var(--green);color:var(--dark)}
+.fr div{min-width:0}
+.fr b{display:block;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr p{margin:2px 0 0;font-weight:800;overflow-wrap:anywhere;color:var(--lav)}.fr.good p{color:var(--ink)}
+.fr small{color:var(--mut);font-weight:800;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+.fr.me{border-color:var(--acc)}
+/* TV */
+body.tv .fres{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.9rem;margin:1.2rem 0}
+body.tv .fr{padding:.6rem .9rem;border-width:.18rem;border-radius:1rem;gap:.8rem}
+body.tv .fr .fp{font-size:1.6rem;border-radius:.8rem}
+body.tv .fr b{font-size:1.25rem}body.tv .fr p{font-size:1.2rem}body.tv .fr small{font-size:.8rem}
+body.tv .fres+.fact{margin-top:0}
+.fhint{text-align:center;font-family:var(--disp);font-size:2rem;color:var(--lav);margin:2rem 0 0;text-transform:uppercase;letter-spacing:.03em}
+.fready{text-align:center;color:var(--mut);font-weight:900;margin:1rem 0 0}
+.chip.wait{opacity:.75}
+.chip.wait em{background:var(--panel2);color:var(--lav)}

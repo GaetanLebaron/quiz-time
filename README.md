@@ -8,7 +8,11 @@ Application de quiz pour un Maître du Jeu : un **écran TV** affiche les questi
 |---|---|
 | `index.html` | Page de l'application |
 | `style.css` | Apparence |
-| `app.js` | Logique du jeu |
+| `base.js` | Réglages, rôle de l'appareil (TV, télécommande, équipe, hôte sans TV) et fonctions communes |
+| `moteur.js` | Déroulement de la partie avec Maître du Jeu |
+| `liaison.js` | Échange de messages entre la TV et les téléphones (ntfy.sh, Nostr, liaison directe) |
+| `libre.js` | Partie sans Maître du Jeu : chaque équipe joue sur son téléphone |
+| `app.js` | Écrans et démarrage de l'application |
 | `questions.json` | **Toutes les questions**, thèmes et niveaux |
 | `qrcode.js` | Génération du QR code |
 | `lilita-one.woff2`, `nunito.woff2` | Polices (Lilita One et Nunito, licence SIL Open Font License) |
@@ -32,6 +36,20 @@ Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt 
 Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'accueil (« Ajouter à l'écran d'accueil » dans le menu du navigateur), l'icône rouvre directement la télécommande. Pour utiliser un appareil comme écran TV à la place, ouvre `adresse-du-site/?tv`, ou touche le lien « Utiliser cet appareil comme écran TV » en bas de l'écran de configuration.
 
 À la fin d'une partie, la TV garde le classement affiché (même après un rechargement) jusqu'à ce que le Maître du Jeu touche « Nouvelle partie » sur son téléphone. Si le téléphone n'est plus connecté, la TV affiche un QR code au-dessus du classement : il suffit de le scanner puis de toucher « Nouvelle partie ». Ouvrir `adresse-du-site/?tv` sur la TV efface aussi la partie en cours et revient à l'écran d'accueil.
+
+## Partie sans Maître du Jeu
+
+Sur l'écran de configuration, choisis **Sans** Maître du Jeu, puis **Avec la TV** ou **Sans TV**. Le téléphone qui configure est l'hôte : il joue aussi pour son équipe. Les autres équipes (8 au total au maximum) scannent le QR code affiché sur ce téléphone et entrent le nom de leur équipe.
+
+- Toutes les équipes répondent en même temps à la même question, chacune sur son téléphone.
+- Réponse tapée directement : 5 points (les petites fautes d'orthographe sont acceptées). Avec les 4 propositions : 3 points. Après un 50/50 : 1 point. Chaque équipe choisit son aide sans que les autres le voient, et une réponse envoyée est définitive.
+- La question se termine quand toutes les équipes ont répondu ou à la fin du timer (30 s par défaut). Une équipe sans réponse marque 0.
+- Avec la TV, celle-ci montre qui a déjà répondu, puis la bonne réponse, la réponse de chaque équipe et ses points. Sans TV, tout s'affiche sur les téléphones.
+- Chaque équipe touche **Prêt** pour passer à la question suivante ; l'hôte peut forcer la suite avec **Question suivante**.
+- Une équipe peut rejoindre la partie en cours (elle joue à partir de la question suivante) ou la quitter sans bloquer les autres.
+- Au début de chaque question, les téléphones Android vibrent et les iPhone émettent un petit son.
+
+Sans TV, l'hôte peut aussi ouvrir directement `adresse-du-site/?host`. Son téléphone fait alors tourner la partie : il doit rester allumé jusqu'à la fin.
 
 ## Modes de jeu
 
@@ -86,4 +104,4 @@ Des lignes de diagnostic complètent l'écran d'attente du téléphone :
 2. **Liaison directe WebRTC par le Wi-Fi** : ensuite, toutes les actions de jeu passent directement entre la TV et le téléphone, sans serveur relais. Le quota gratuit de ntfy.sh (quelques centaines de messages par jour et par connexion Internet) n'est donc plus consommé pendant la partie. Un serveur STUN public (Google) sert seulement à connaître son adresse ; aucun message de jeu n'y passe.
 3. **Secours** : si la liaison directe échoue (téléphone en 4G, Wi-Fi « invité » qui isole les appareils…) ou se coupe, tout repasse automatiquement par ntfy.sh et Nostr, et le téléphone retente une liaison directe.
 
-Les noms d'équipes, questions et scores qui passent par ntfy.sh ou Nostr sont protégés par un code aléatoire contenu dans le QR code (ils ne sont pas chiffrés : quelqu'un qui connaîtrait ce code pourrait les lire). Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy : il suffit alors de définir `window.QT_BASE='https://mon-serveur/'` avant le chargement de `app.js` dans `index.html`. De même, `window.QT_NOSTR=['wss://mon-relais']` remplace la liste des relais Nostr (`[]` les désactive).
+Les noms d'équipes, questions et scores qui passent par ntfy.sh ou Nostr sont protégés par un code aléatoire contenu dans le QR code (ils ne sont pas chiffrés : quelqu'un qui connaîtrait ce code pourrait les lire). Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy : il suffit alors de définir `window.QT_BASE='https://mon-serveur/'` avant le chargement de `base.js` dans `index.html`. De même, `window.QT_NOSTR=['wss://mon-relais']` remplace la liste des relais Nostr (`[]` les désactive).

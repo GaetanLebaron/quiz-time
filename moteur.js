@@ -1,4 +1,4 @@
-/* ---------- Moteur (écran TV uniquement) ---------- */
+/* ---------- Moteur de la partie avec Maître du Jeu (sur l'écran TV). La partie sans Maître du Jeu est dans libre.js. ---------- */
 const qk=q=>q.q+'|'+q.a;
 /* Mode Crescendo : les tours sont répartis entre les niveaux choisis, du plus facile au plus difficile.
    Ex. 5 tours sur les niveaux 1, 3 et 5 → 1, 1, 3, 3, 5 (les premiers niveaux reçoivent les tours en plus). */
@@ -45,14 +45,15 @@ function next(){
   if(S.round>=S.rounds){scr='end';return}
   S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.pick=null;S.phase='q';armTimer(true);
 }
-const pub=()=>S&&{teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,lv:curLv(),cr:!!S.lvl,th:S.themes[S.round],
+const pub=()=>S&&(S.free?fpub():{teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,lv:curLv(),cr:!!S.lvl,th:S.themes[S.round],
   q:S.q?{q:S.q.q,a:S.q.a,l:S.q.l,f:S.q.f}:null,phase:S.phase,opts:S.opts,hid:S.hid,pts:S.pts,pick:S.pick,tt:S.tt||0,tl:tlNow(),
-  last:S.round==S.rounds-1&&S.ti==S.teams.length-1};
+  last:S.round==S.rounds-1&&S.ti==S.teams.length-1});
 
 function onCmd(m){
-  if(m.t=='start')startGame(m.cfg||{});
+  if(fCmd(m)){}   /* partie sans Maître du Jeu (libre.js) */
+  else if(m.t=='start')startGame(m.cfg||{});
   else if(m.t=='replay'||m.t=='pause'){saveS();S=null;scr='cfgd';lsSet(CK,null)}
-  else if(m.t=='resume'){const g=findG(m.p);if(g&&g.scr!='end'){saveS();restore(g)}}
+  else if(m.t=='resume'){const g=findG(m.p);if(g&&g.scr!='end'){saveS();restore(g);if(S.free&&m.pid)S.host=m.pid}}
   else if(S&&m.t=='finish'&&scr=='game'){scr='end'}
   else if(m.t=='del'){lsSet(GK,(lsGet(GK)||[]).filter(g=>g.id!=m.p))}
   /* Les règles s'affichent sur la TV avant la première question, jusqu'à ce que le Maître du Jeu lance la partie. */
@@ -78,11 +79,11 @@ function restore(g){
   const s=g.S;
   S={...s,used:new Set((s.used||[]).map(k=>QMAP.get(k)).filter(Boolean)),q:QMAP.get(s.q)||null};
   scr=g.scr;
-  if(scr=='game'&&!S.q){S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.phase='q'}
+  if(scr=='game'&&!S.q){if(S.free)fq();else{S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.phase='q'}}
   armTimer(false);
 }
 const findG=id=>(lsGet(GK)||[]).find(g=>g.id==id);
 const loadS=()=>restore(findG(lsGet(CK)));
 const gsum=()=>(lsGet(GK)||[]).filter(g=>g&&g.S&&Array.isArray(g.S.teams))   /* ignore une sauvegarde abîmée au lieu de bloquer l'envoi */
-  .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',cr:!!g.S.lvl,teams:g.S.teams}));
+  .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',cr:!!g.S.lvl,free:!!g.S.free,teams:g.S.teams.map(t=>({n:t.n,s:t.s}))}));
 

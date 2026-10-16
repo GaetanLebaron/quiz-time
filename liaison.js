@@ -1,14 +1,19 @@
 /* ---------- Transport ----------
    Mise en relation via ntfy.sh, puis liaison directe WebRTC (canal de données) par le Wi-Fi : le quota gratuit de ntfy.sh
    (quelques centaines de messages par jour et par connexion Internet) n'est plus consommé par les actions de jeu.
-   Si la liaison directe échoue (téléphone en 4G, Wi-Fi qui isole les appareils…), tout passe par ntfy.sh comme avant. */
-const T=TV?(()=>{let id=rawGet('qt-id2');if(!okId(id)){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');rawSet('qt-id2',id)}return id})():JOIN;
-const OUT=BASE+T+(TV?'s':'c'),IN=BASE+T+(TV?'c':'s');
+   Si la liaison directe échoue (téléphone en 4G, Wi-Fi qui isole les appareils…), tout passe par ntfy.sh comme avant.
+   L'appareil qui fait tourner la partie (TV, ou hôte sans TV) peut avoir plusieurs téléphones : une liaison directe par téléphone,
+   et les relais Internet tant qu'au moins un téléphone récent n'a pas la sienne. */
+const T=ENGINE?(()=>{let id=rawGet('qt-id2');if(!okId(id)){id='qt'+Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>(b%36).toString(36)).join('');rawSet('qt-id2',id)}return id})():JOIN||TEAMJ;
+const OUT=BASE+T+(ENGINE?'s':'c'),IN=BASE+T+(ENGINE?'c':'s');
 /* État de la liaison, affiché à l'écran pour comprendre un blocage. 429 = le service gratuit limite le nombre de requêtes. */
 const net={fail:'',why:'',got:0,ok:0,sse:'',poll:'',polled:null,ntfy:''};
 const codeTag=()=>'…'+String(T).slice(-4);
-const lnkTxt=()=>'Liaison : '+(dcOpen()?'directe par le Wi-Fi ✓':'via ntfy.sh et Nostr'+(rtc.st&&rtc.st!='active'?' (liaison directe : '+rtc.st+')':''));
-const refreshNet=()=>{if(TV?scr=='wait':scr=='conn')render();const e=document.getElementById('lnk');if(e)e.textContent=lnkTxt()};
+const lnkTxt=()=>{
+  if(ENGINE){const n=openPeers().length,k=recentPeers().length;return'Liaison : '+(n&&n>=k?'directe par le Wi-Fi ✓'+(n>1?' ('+n+' téléphones)':''):n?'directe pour '+n+' téléphone(s) sur '+k+', relais Internet pour les autres':'via ntfy.sh et Nostr')}
+  return'Liaison : '+(dcOpen()?'directe par le Wi-Fi ✓':'via ntfy.sh et Nostr'+(rtc.st&&rtc.st!='active'?' (liaison directe : '+rtc.st+')':''));
+};
+const refreshNet=()=>{if(ENGINE?scr=='wait':scr=='conn')render();const e=document.getElementById('lnk');if(e)e.textContent=lnkTxt()};
 let H=()=>{};   /* traitement d'un message reçu, quelle que soit la voie */
 
 /* --- Liaison directe WebRTC (sans serveur relais : STUN sert seulement à connaître son adresse) --- */
@@ -40,9 +45,24 @@ async function rtcOffer(){   /* téléphone */
   await pc.setLocalDescription(await pc.createOffer());await gathered(pc);
   return pc.localDescription.sdp;
 }
-async function rtcAnswer(sdp){   /* TV */
-  const pc=rtcPc();
-  pc.ondatachannel=e=>{if(rtc.pc===pc)rtcWire(pc,e.channel)};
+/* Côté moteur : une liaison par téléphone, repérée par l'identifiant du téléphone (pid). seen = dernier message reçu de ce téléphone. */
+const peers=new Map();
+const pOpen=p=>!!(p.dc&&p.dc.readyState=='open');
+const openPeers=()=>[...peers.values()].filter(pOpen);
+const recentPeers=()=>[...peers.values()].filter(p=>pOpen(p)||Date.now()-p.seen<90000);
+/* Relais Internet nécessaires : aucune liaison directe ouverte, ou un téléphone actif ces 90 dernières secondes sans la sienne. */
+const needRelay=()=>!openPeers().length||recentPeers().some(p=>!pOpen(p));
+function peerSeen(pid){let p=peers.get(pid);if(!p){p={pc:null,dc:null,seen:0};peers.set(pid,p)}p.seen=Date.now();return p}
+async function rtcAnswer(pid,sdp){   /* moteur */
+  const p=peerSeen(pid);try{p.pc&&p.pc.close()}catch(e){}
+  const pc=new RTCPeerConnection({iceServers:ICE});p.pc=pc;p.dc=null;
+  pc.ondatachannel=e=>{
+    if(p.pc!==pc)return;const dc=e.channel;p.dc=dc;
+    const up=()=>{if(p.dc===dc){onDc(true);refreshNet()}};
+    dc.onopen=up;if(dc.readyState=='open')up();
+    dc.onclose=()=>{if(p.dc!==dc)return;p.dc=null;p.seen=Date.now();refreshNet()};
+    dc.onmessage=e=>{try{recv(JSON.parse(e.data))}catch(x){}};
+  };
   await pc.setRemoteDescription({type:'offer',sdp});
   await pc.setLocalDescription(await pc.createAnswer());await gathered(pc);
   return pc.localDescription.sdp;
@@ -81,7 +101,7 @@ const EC=typeof BigInt=='function'&&window.crypto&&crypto.subtle&&window.WebSock
   }};
 })():null;
 const NOSTR=!EC?[]:window.QT_NOSTR||['wss://relay.damus.io','wss://nos.lol','wss://relay.primal.net'];
-const NKIND=21212,TOUT=T+(TV?'s':'c'),TIN=T+(TV?'c':'s');
+const NKIND=21212,TOUT=T+(ENGINE?'s':'c'),TIN=T+(ENGINE?'c':'s');
 async function nEvent(content){
   const created_at=Math.floor(Date.now()/1000),tags=[['t',TOUT]];
   const id=hex(await sha(new TextEncoder().encode(JSON.stringify([0,EC.pub,created_at,NKIND,tags,content]))));
@@ -129,10 +149,17 @@ const outQ=[];let sending=false,sendT=0,sendDelay=0,lastHello=0;
 const queued=i=>!(sending&&i==0);   /* faux pour le message en cours d'envoi */
 function say(m,relay){
   if(m.t=='hello')lastHello=Date.now();
+  if(!ENGINE)m.pid=PID;   /* le moteur sait ainsi de quel téléphone vient le message */
   m._i=Math.random().toString(36).slice(2,10);m._n=sendN=Math.max(Date.now(),sendN+1);   /* identifiant et ordre du message (voir recv) */
-  if(!relay&&dcOpen()){try{rtc.dc.send(JSON.stringify(m));net.ok++;return}catch(e){}}
+  if(ENGINE&&!relay){
+    /* Moteur : l'état part par chaque liaison directe ouverte, et aussi par les relais si un téléphone n'en a pas. */
+    const js=JSON.stringify(m),op=openPeers();op.forEach(p=>{try{p.dc.send(js)}catch(e){}});
+    if(op.length&&!needRelay()){net.ok++;return}
+  }
+  else if(!relay&&dcOpen()){try{rtc.dc.send(JSON.stringify(m));net.ok++;return}catch(e){}}
   const n=outQ.length,last=outQ[n-1];
-  if(m.k=='s'&&last&&last.m.k=='s'&&queued(n-1)){if(last.m.a&&!m.a){m.a=last.m.a;m.rid=last.m.rid;relay=true}outQ[n-1]={m,relay}}
+  /* Deux réponses WebRTC destinées à deux téléphones différents ne se remplacent pas. */
+  if(m.k=='s'&&last&&last.m.k=='s'&&queued(n-1)&&!(m.a&&last.m.a)){if(last.m.a&&!m.a){m.a=last.m.a;m.rid=last.m.rid;relay=true}outQ[n-1]={m,relay}}
   else if(m.t=='hello'){const i=outQ.findIndex((x,i)=>x.m.t=='hello'&&queued(i));if(i>=0)outQ[i]={m,relay};else outQ.push({m,relay})}
   else outQ.push({m,relay});
   if(!sending&&!sendT)flush();
@@ -223,15 +250,18 @@ function listen(onState,fallback){
   }
 }
 /* État envoyé par la TV. extra = réponse WebRTC : ce message passe forcément par les relais Internet (ntfy.sh et Nostr). */
-const push=(ask,extra)=>{const m={k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined};if(extra)say(Object.assign(m,extra),true);else say(m)};
+const push=(ask,extra)=>{const m={k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined,lb:lobby};if(extra)say(Object.assign(m,extra),true);else say(m)};
 function tvInit(){
   joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+T;
   H=m=>{
-    conn=true;if(m.t=='hello'&&!S)scr='cfgd';
-    /* Offre de liaison directe du téléphone : la TV répond en joignant son état (un seul message ntfy.sh). */
-    if(m.t=='hello'&&m.o&&RTC_OK)rtcAnswer(m.o).then(a=>{saveS();push(false,{a,rid:m.rid});render()},()=>{rtc.st='impossible, relais Internet';onCmd(m)});
+    conn=true;if(m.t=='hello'&&!S&&!HOSTL)scr='cfgd';
+    if(m.pid)peerSeen(m.pid);
+    /* Offre de liaison directe du téléphone : le moteur répond en joignant son état (un seul message ntfy.sh). */
+    if(m.t=='hello'&&m.o&&RTC_OK)rtcAnswer(m.pid||'?',m.o).then(a=>{saveS();push(false,{a,rid:m.rid});render()},()=>onCmd(m));
     else onCmd(m);
   };
+  /* Une liaison directe vient de s'ouvrir : si plus aucun téléphone n'a besoin des relais, ce qui y attendait est abandonné. */
+  onDc=()=>{if(!needRelay()){outQ.splice(sending?1:0);if(sendT){clearTimeout(sendT);sendT=0;sendDelay=0}}push()};
   let sse=false;nHook=()=>{tvOk=sse||nLive()>0;render()};nStart();
   listen(ok=>{sse=ok;tvOk=ok||nLive()>0;render()});
   if(S)push(true);
@@ -246,7 +276,7 @@ function hello(){
 function ctlInit(){
   H=d=>{
     if(d.k=='s'){
-      cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;
+      cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;lb=d.lb||[];
       if(d.a&&d.rid==rtc.rid&&rtc.pc&&rtc.pc.signalingState=='have-local-offer')rtc.pc.setRemoteDescription({type:'answer',sdp:d.a}).catch(()=>{rtc.st='impossible, relais Internet'});
       if(d.ask)hello();
     }
