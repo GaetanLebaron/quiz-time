@@ -198,6 +198,16 @@ body.tv .anec{padding:.9rem 1.2rem;margin-bottom:0;border-width:.18rem}
 body.tv .end{max-width:46rem}
 body.tv .win{font-size:3.6rem}
 body.tv .score li{padding:.6rem 1rem;border-width:.18rem}
+/* Écran final : tout en plus gros (sauf le nom du vainqueur), 8 équipes tiennent sur un écran 16:9 */
+body.tv .end{max-width:58rem}
+body.tv .end>.sub{font-size:1.8rem}
+body.tv .end .win{margin:.2rem 0 1rem}
+body.tv .end .card{padding:1.2rem 1.6rem}
+body.tv .end .score h3{font-size:1.6rem;margin-bottom:.7rem}
+body.tv .end .score ol{gap:.45rem}
+body.tv .end .score li{font-size:1.6rem;padding:.25rem 1.1rem;gap:.9rem}
+body.tv .end .score .rk{width:1.6rem}
+body.tv .end .score .pt{font-size:2.3rem;line-height:1.1}
 /* Écran en portrait (smartphone, tablette) : équipes sur leur propre ligne */
 @media(orientation:portrait){.tvscore{justify-content:flex-start;flex-basis:100%}}
 /* TV étroite (smartphone) : textes réduits, propositions et résultat l'un sous l'autre */
