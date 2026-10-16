@@ -493,8 +493,8 @@ function board(s,cur){
   return `<aside class="card score"><h3>Classement</h3><ol>${r.map((t,k)=>`<li class="${cur&&t.i==s.i0?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><span class="pt">${t.s}</span></li>`).join('')}</ol></aside>`;
 }
 function head(s){
-  const th=THEMES[s.th],dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
-  return `<div class="bar" style="margin-bottom:16px"><span>Tour ${s.round+1} / ${s.rounds}${s.cr?' · Crescendo':''}</span><span class="dots">${dots}</span></div>
+  const th=THEMES[s.th];   /* même pastille « TOUR x/y » que sur la TV, sans étoiles : elle tient quelle que soit la durée de la partie */
+  return `<div class="pill ph">Tour ${s.round+1}<span>/${s.rounds}</span></div>
   <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>`;
 }
 /* Propositions. Une fois la réponse donnée (phase r) : la bonne en vert, la réponse fausse choisie en rouge, les autres en retrait.
