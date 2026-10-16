@@ -396,7 +396,7 @@ function go(){
 /* ---------- Timer (affichage) ---------- */
 const tmrHTML=s=>s&&s.tt&&s.phase!='r'?`<div class="tmr" id="tmr"><div class="tmr-bar"><i id="tmrb"></i></div><span id="tmrv">${s.tt} s</span></div>`:'';
 /* Écran TV : compte à rebours circulaire, à droite de la question */
-const tmrRing=s=>s.tt&&s.phase!='r'?`<div class="ring" id="tmr"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18.5" pathLength="100"/><circle id="tmrc" cx="22" cy="22" r="18.5" pathLength="100"/></svg><b id="tmrv">${s.tt}</b><span>sec</span></div>`:'';
+const tmrRing=s=>s.tt&&s.phase!='r'?`<div class="ring" id="tmr"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18.5" pathLength="100"/><circle id="tmrc" cx="22" cy="22" r="18.5" pathLength="100"/></svg><b id="tmrv">${s.tt}</b></div>`:'';
 function tick(){
   const box=document.getElementById('tmr');if(!box)return;
   const s=TV?pub():st;if(!s||!s.tt)return;

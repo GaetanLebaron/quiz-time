@@ -164,10 +164,9 @@ body.tv .qcard.mini .q{font-size:1.6rem}
 .ring{position:relative;flex:none;display:grid;place-content:center;justify-items:center;width:7rem;height:7rem;color:var(--dark);--c:var(--acc)}
 .ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:4.5}
-.ring circle:first-child{fill:#efeaff;stroke:var(--edge);stroke-width:6.5}
+.ring circle:first-child{fill:#efeaff;stroke:none}   /* pas de contour : seul l'arc du temps restant */
 .ring circle+circle{stroke:var(--c);stroke-dasharray:100;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
-.ring b{position:relative;font-family:var(--disp);font-weight:400;font-size:2.5rem;line-height:.9}
-.ring span{position:relative;font-weight:900;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#6a5bd6}
+.ring b{position:relative;font-family:var(--disp);font-weight:400;font-size:2.8rem;line-height:1}
 .ring.low{--c:var(--red)}.ring.zero{--c:var(--red)}.ring.zero b{animation:pulse .8s ease-in-out infinite}
 /* Propositions */
 body.tv .opts{gap:1.5rem 1.8rem;margin:0}
