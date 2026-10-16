@@ -49,9 +49,6 @@ border:3px solid var(--edge);border-radius:16px;padding:12px 18px;box-shadow:0 5
 
 /* Télécommande : en-tête de jeu */
 .grid{display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start}
-.bar{display:flex;align-items:center;gap:12px;color:var(--mut);font-family:var(--disp);text-transform:uppercase;letter-spacing:.03em}
-.dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:var(--panel2);border:2px solid var(--edge)}
-.dots i.d{background:var(--yel)}.dots i.c{background:var(--orange);width:22px;border-radius:99px}
 .ctx{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
 .who{font-family:var(--disp);font-size:2rem;line-height:1.05}.who span{display:block;font-family:"Nunito",sans-serif;font-size:.85rem;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .theme,.qtag{--c:var(--purple);display:inline-flex;align-items:center;gap:.4em;background:var(--c);color:var(--dark);border:3px solid var(--edge);border-radius:12px;padding:6px 14px;
@@ -143,6 +140,7 @@ body.tv .card{padding:1.4rem 1.6rem;border-radius:1.3rem;border-width:.18rem;box
 .pill{display:flex;align-items:center;gap:.25rem;background:var(--panel);border:.18rem solid var(--edge);border-radius:999px;padding:.55rem 1.3rem;box-shadow:0 .3rem 0 var(--drop);
 font-family:var(--disp);font-size:1.35rem;letter-spacing:.03em;text-transform:uppercase}
 .pill>span:not(.stars){color:var(--mut)}
+.pill.ph{width:max-content;max-width:100%;margin-bottom:14px;padding:5px 14px;font-size:.95rem;border-width:2.5px;box-shadow:0 3px 0 var(--drop)}   /* télécommande */
 .stars{display:flex;gap:.3rem;margin-left:1rem}
 .stars svg{width:1.15rem;height:1.15rem;fill:none;stroke:var(--mut);stroke-width:2;stroke-linejoin:round}
 .stars .on svg{fill:var(--yel);stroke:var(--yel)}
