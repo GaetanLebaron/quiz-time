@@ -76,7 +76,7 @@ function startGame(c){
   const rounds=Math.max(cr?lv.length:1,Math.min(30,+c.rounds||5)),level=cr?lv[0]:Math.max(1,Math.min(LV.length,+c.level||2));
   let tt=Math.round(+c.timer||0);tt=tt>0?Math.max(5,Math.min(300,tt)):0;
   const bag=[];while(bag.length<rounds)bag.push(...shuf(THEMES.map((_,i)=>i)));
-  S={gid:Date.now(),date:Date.now(),teams:teams.map(n=>({n,s:0})),rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),phase:'q',opts:null,hid:[],pts:0};
+  S={gid:Date.now(),date:Date.now(),teams:teams.map(n=>({n,s:0})),rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),phase:'rules',opts:null,hid:[],pts:0};
   S.q=pick(S.themes[0]);armTimer(true);scr='game';
 }
 function next(){
@@ -94,6 +94,8 @@ function onCmd(m){
   else if(m.t=='resume'){const g=findG(m.p);if(g&&g.scr!='end'){saveS();restore(g)}}
   else if(S&&m.t=='finish'&&scr=='game'){scr='end'}
   else if(m.t=='del'){lsSet(GK,(lsGet(GK)||[]).filter(g=>g.id!=m.p))}
+  /* Les règles s'affichent sur la TV avant la première question, jusqu'à ce que le Maître du Jeu lance la partie. */
+  else if(S&&m.t=='begin'&&S.phase=='rules'){S.phase='q';armTimer(true)}
   else if(S&&m.t=='show'&&S.phase=='q'){S.opts=mkOpts(S.q);S.phase='m'}
   else if(S&&m.t=='fifty'&&S.phase=='m'){S.hid=shuf(S.opts.filter(o=>o!=S.q.a)).slice(0,2);S.phase='f'}
   else if(S&&m.t=='ans'&&S.phase=='q'&&[0,5].includes(m.p)){S.teams[S.ti].s+=m.p;S.pts=m.p;S.pick=null;S.phase='r'}
@@ -406,6 +408,7 @@ function tick(){
 /* ---------- Animation de changement d'équipe (écran TV) ---------- */
 function teamOverlay(){
   if(!S||scr!='game')return;
+  if(S.phase=='rules')return;   /* l'animation du premier tour attend la fin des règles */
   const key=S.gid+'-'+S.round+'-'+S.ti;
   if(key===lastKey)return;
   lastKey=key;
@@ -525,6 +528,24 @@ function tvTop(s){
   const chips=r.map((t,k)=>`<div class="chip ${t.i==s.ti?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><b>${t.s}</b></div>`).join('');
   return `<div class="tvhead"><div class="tvtour"><span>Tour ${s.round+1} / ${s.rounds}${s.cr?' · Niveau '+s.lv+' '+esc(LV[s.lv-1]):''}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
 }
+function tvRules(){
+  const P=(t,d,x)=>`<div class="rpt"><b>${t}</b><span><strong>${d}</strong> ${x}</span></div>`;
+  return `<div class="rules"><h2 class="hero">🎉 Quiz <span>Time</span> — Règles du jeu</h2>
+  <p class="rintro">Bienvenue dans Quiz Time ! Formez vos équipes, échauffez vos neurones : six thèmes de culture générale vous attendent.</p>
+  <div class="rgrid"><div class="rcol">
+  <section class="card"><h3>Le principe</h3><p>La partie se joue en plusieurs tours. À chaque tour, chaque équipe reçoit une question, à tour de rôle. Le thème change à chaque tour, parmi :</p>
+    <div class="rth">${THEMES.map(t=>`<span style="--c:${t.c}">${t.e} ${esc(t.n)}</span>`).join('')}</div></section>
+  <section class="card"><h3>Le saviez-vous ?</h3><p>Après chaque question, le Maître du Jeu partage une petite anecdote. Ouvrez grand les oreilles : on ne sait jamais, elle pourrait vous servir un jour !</p></section>
+  <section class="card"><h3>La fin de partie</h3><p>Après le dernier tour, l'équipe qui a le plus de points remporte la partie 🏆. En cas d'égalité, les équipes ex æquo se partagent la victoire.</p></section>
+  </div><div class="rcol">
+  <section class="card"><h3>Comment répondre</h3><p>Quand c'est votre tour, le Maître du Jeu lit la question. Vous avez trois façons de tenter votre chance, et plus vous prenez de risques, plus vous gagnez de points :</p>
+    ${P('5 pts','Réponse directe :','vous répondez sans aide. Les vrais experts tentent leur chance ici !')}
+    ${P('3 pts','Les 4 propositions :','vous demandez à voir quatre réponses possibles, et vous choisissez.')}
+    ${P('1 pt','Le 50/50 :','il ne reste plus que deux propositions. À vous de trouver la bonne.')}
+    <p class="rwarn">⚠️ <strong>Attention :</strong> une mauvaise réponse, à n'importe quelle étape, rapporte 0 point et la main passe à l'équipe suivante. Demander de l'aide, c'est donc moins de points, mais plus de chances de marquer.</p></section>
+  <section class="card"><h3>Les règles d'or</h3><ul><li>Une seule réponse par équipe : mettez-vous d'accord avant de parler.</li><li>Pas de téléphone, pas d'aide extérieure.</li><li>Les décisions du Maître du Jeu sont sans appel… mais toujours bienveillantes !</li></ul></section>
+  </div></div><p class="rluck">Bonne chance à toutes les équipes !</p></div>`;
+}
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
   return `${tvTop(s)}<div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div>${tmrHTML(s)}<div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>
@@ -532,6 +553,8 @@ function tvGame(s){
   ${r?`${verdict(s)}<div class="anec"><b>Réponse : ${esc(q.a)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`:''}</section>`;
 }
 function ctlGame(s){
+  if(s.phase=='rules')return `<div class="setup"><section class="card"><h3>Règles du jeu</h3><p>Les règles sont affichées sur la TV. Laissez les équipes les lire, puis lancez la première question.</p>
+    <button class="btn pink big" onclick="cmd('begin')">Lancer la partie</button></section></div>`;
   const q=s.q,B=(c,t,a)=>`<button class="btn ${c} big" onclick="${a}">${t}</button>`;
   let b='';
   if(s.phase=='q')b=B('green','Bonne réponse directe',"cmd('ans',5)")+B('pink','Mauvaise réponse',"cmd('ans',0)")+B('','Afficher les 4 propositions',"cmd('show')");
@@ -553,7 +576,7 @@ function render(){
   const a=$('#app');
   if(TV){
     const s=pub();
-    a.innerHTML=scr=='game'&&s&&s.q?lostBar()+tvGame(s):scr=='end'&&s?lostBar('Scannez ce QR code avec le téléphone du Maître du Jeu puis touchez « Nouvelle partie ».')+endHTML(s,false):tvWait();
+    a.innerHTML=scr=='game'&&s&&s.q?lostBar()+(s.phase=='rules'?tvRules():tvGame(s)):scr=='end'&&s?lostBar('Scannez ce QR code avec le téléphone du Maître du Jeu puis touchez « Nouvelle partie ».')+endHTML(s,false):tvWait();
     teamOverlay();
   }
   else if(scr=='conn')a.innerHTML=`<div class="card"><h3>Connexion à l'écran principal…</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">Écran TV : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?connHelp():''}${diagHTML()}<p class="foot sub"><a href="?forget">Scanner le QR code d'un autre écran</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
