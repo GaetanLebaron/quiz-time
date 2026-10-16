@@ -509,7 +509,7 @@ function ctlGame(s){
     const o=sel!=null?s.opts[sel]:null;
     b=(o==null?'<p class="sub hint">Touchez la proposition donnée par l\'équipe, puis validez.</p>'
       :B(o==q.a?'green':'pink',`Valider « ${esc(o)} »`,`answer(st.opts[${sel}])`))
-      +(s.phase=='m'?B('','50/50',"cmd('fifty')"):'')+B('mut','Pas de réponse (0 pt)','answer(null)');
+      +(s.phase=='m'?B('','50/50',"cmd('fifty')"):'')+B('mut','Pas de réponse','answer(null)');
   }
   else b=`<div class="anec"><b>${s.pts?'+'+plural(s.pts,'point'):'0 point'} pour ${esc(s.teams[s.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',s.last?'Voir le classement final':'Question suivante',"cmd('next')");
   const opts=(s.phase=='m'||s.phase=='f')?pickHTML(s):optsHTML(s,true);
