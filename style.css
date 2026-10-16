@@ -58,6 +58,12 @@ text-shadow:0 0 4px color-mix(in srgb,var(--c) 45%,transparent);box-shadow:0 0 8
 .diag summary{cursor:pointer;text-align:center;padding:.3rem;list-style-position:inside}
 .diag .st{margin:.5rem 0}
 .acts{display:grid;gap:12px}
+/* Carte de la question : espacement régulier par row-gap, les marges des éléments sont annulées */
+.qcard{display:flex;flex-direction:column;row-gap:18px;padding:24px}
+.qcard.qcard.qcard>*,.qcard.qcard .acts>.anec{margin:0}   /* sélecteur renforcé : passe devant body.tv .q, body.tv .opts, body.tv .res… */
+.qcard>.tmr{flex:none}
+/* Pause / Terminer sous la carte : pleine largeur, côte à côte si la place le permet */
+.ctlbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
 .anec{border-left:4px solid var(--pink);background:rgba(255,60,172,.08);border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:20px}
 .anec p{margin:4px 0 0;color:var(--ink)}.anec b{color:var(--pink)}
 .score h3{color:var(--pink);text-shadow:0 0 6px rgba(255,60,172,.3)}
@@ -88,6 +94,7 @@ body.tv{font-size:1.25rem}
 body.tv .wrap{max-width:none;padding:clamp(14px,2.5vh,48px) clamp(16px,3.5vw,72px) clamp(20px,3vh,56px)}
 body.tv header{display:none}
 body.tv .card{padding:1.6rem 1.9rem;border-radius:1.2rem}
+body.tv .qcard{padding:1.8rem;row-gap:1.4rem}
 .tvwait{text-align:center;display:grid;gap:1.1rem;justify-items:center;padding-top:.4rem}
 .hero{font-size:clamp(2.6rem,7vh,6rem);margin:0 0 .6rem;font-weight:700;color:var(--pink);text-shadow:0 0 6px rgba(255,60,172,.5)}.hero span{color:var(--cyan);text-shadow:0 0 6px rgba(53,240,255,.5)}
 .qr{background:#fff;padding:.9rem;border-radius:1rem;line-height:0}.qr img{width:min(62vw,40vh,24rem);image-rendering:pixelated}
