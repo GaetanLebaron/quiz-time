@@ -128,6 +128,10 @@ body.tv .opt:not(.ok):not(.bad):not(.no) .sh{border-width:.18rem}
    Toutes les tailles sont en rem, et la taille de base suit la largeur ET la hauteur de l'écran.
    ========================================================================== */
 html.tv{font-size:clamp(13px,min(2.05vw,1.95vh),52px)}
+/* Écran en paysage : la taille suit la largeur comme sur un écran 16:9 (1.1vw = 1.95vh en 16:9).
+   Certains navigateurs de TV annoncent une hauteur plus grande que la partie réellement affichée ;
+   sans cette limite, le texte grossit et le bas de l'écran est coupé. */
+@media(orientation:landscape){html.tv{font-size:clamp(13px,min(1.1vw,1.95vh),52px)}}
 @media(max-height:500px){html.tv{font-size:clamp(11px,min(2.2vw,2.6vh),56px)}}
 body.tv{font-size:1.2rem;background-size:1.6rem 1.6rem,auto}
 /* Marge de sécurité d'environ 5 % sur chaque bord : beaucoup de TV rognent le pourtour de l'image (overscan). */
@@ -176,6 +180,8 @@ body.tv .opts{gap:1.5rem 1.8rem;margin:0}
 body.tv .opt{font-size:1.9rem;padding:1rem 1.3rem;gap:1.2rem;border-width:.2rem;border-radius:1.3rem;box-shadow:0 .4rem 0 var(--drop)}
 body.tv .opt.ok{box-shadow:0 0 0 .3rem var(--edge),0 .6rem 0 var(--drop)}
 body.tv .opt.ok .sh{border-width:.18rem}
+body.tv .opt .ot{overflow-wrap:break-word;hyphens:auto}
+body.tv .opt .otag{white-space:normal;width:min-content;text-align:center;line-height:1.1}   /* « Bonne réponse » sur deux lignes : plus de place pour la réponse */   /* réponse longue : coupure entre les mots (ou avec un trait d'union), jamais au milieu sans tiret */
 /* Réponse révélée : points marqués et « Le saviez-vous ? » sur la même ligne */
 .rrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:1.8rem;margin-top:1.8rem;align-items:stretch}
 .rrow.solo{grid-template-columns:minmax(0,1fr)}
@@ -237,7 +243,7 @@ background:var(--c);color:var(--dark);border:.2rem solid var(--edge);border-radi
 /* Règles du jeu (écran TV, avant la première question) : tout tient sur un écran */
 .rules{display:grid;gap:.75rem;font-size:1.05rem}
 /* Règles centrées verticalement dans la zone sûre (hauteur de l'écran moins les marges de .wrap) */
-body.tv .rules{min-height:calc(100vh - 2*clamp(14px,5vh,64px));align-content:center}
+body.tv .rules{min-height:calc(min(100vh,56.25vw) - 2*clamp(14px,5vh,64px));align-content:center}
 .rules .hero{font-size:2.4rem;margin:0;text-align:center}
 .rintro{text-align:center;margin:0;font-size:1rem;font-weight:800;color:var(--lav)}
 .rluck{text-align:center;margin:.1rem 0 0;font-family:var(--disp);font-size:1.5rem;color:var(--acc);text-transform:uppercase;letter-spacing:.03em;text-shadow:0 .25rem 0 var(--drop)}
