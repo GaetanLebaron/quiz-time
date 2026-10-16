@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="QuizTimeTheme" parent="@android:style/Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/fond</item>
+        <item name="android:colorPrimary">@color/fond</item>
+        <item name="android:colorPrimaryDark">@color/fond</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>
