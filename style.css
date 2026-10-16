@@ -163,7 +163,7 @@ font-style:normal;font-family:var(--disp);font-size:1rem;letter-spacing:.04em;te
 /* Question : carte blanche, étiquette du thème en biais, timer circulaire à droite */
 body.tv .qcard{position:relative;display:flex;flex-direction:row;align-items:center;gap:2rem;background:#fff;color:var(--dark);border:.2rem solid var(--edge);border-radius:1.6rem;
 padding:2.6rem 2.6rem 2.2rem;margin-bottom:2.2rem;box-shadow:0 .5rem 0 var(--drop)}
-body.tv .qtag{position:absolute;left:2.4rem;top:0;transform:translateY(-55%) rotate(-2deg);font-size:1rem;border-width:.18rem;border-radius:.7rem;padding:.35rem .9rem;box-shadow:0 .25rem 0 var(--drop)}
+body.tv .qtag{position:absolute;left:2.4rem;top:0;transform:translateY(-55%) rotate(-2deg);font-size:1.45rem;border-width:.2rem;border-radius:.8rem;padding:.4rem 1.1rem;box-shadow:0 .25rem 0 var(--drop)}
 body.tv .q{flex:1;font-size:3rem;line-height:1.1;margin:0;color:var(--dark)}
 body.tv .qcard.mini{padding:1rem 1.6rem;gap:1.2rem;margin-bottom:1.4rem;border-radius:1.2rem}
 body.tv .qcard.mini .qtag{position:static;transform:none;font-size:1.1rem;box-shadow:none;flex:none}
