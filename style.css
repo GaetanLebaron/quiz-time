@@ -140,7 +140,7 @@ body.tv .card{padding:1.4rem 1.6rem;border-radius:1.3rem;border-width:.18rem;box
 .pill{display:flex;align-items:center;gap:.25rem;background:var(--panel);border:.18rem solid var(--edge);border-radius:999px;padding:.55rem 1.3rem;box-shadow:0 .3rem 0 var(--drop);
 font-family:var(--disp);font-size:1.35rem;letter-spacing:.03em;text-transform:uppercase}
 .pill>span:not(.stars){color:var(--mut)}
-.pill.ph{width:max-content;max-width:100%;margin-bottom:18px;border-width:3px;box-shadow:0 5px 0 var(--drop)}   /* télécommande */
+.pill.ph{width:max-content;max-width:100%;margin-bottom:14px;padding:5px 14px;font-size:.95rem;border-width:2.5px;box-shadow:0 3px 0 var(--drop)}   /* télécommande */
 .stars{display:flex;gap:.3rem;margin-left:1rem}
 .stars svg{width:1.15rem;height:1.15rem;fill:none;stroke:var(--mut);stroke-width:2;stroke-linejoin:round}
 .stars .on svg{fill:var(--yel);stroke:var(--yel)}
