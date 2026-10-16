@@ -4,12 +4,12 @@
 @font-face{font-family:"Lilita One";src:url(lilita-one.woff2) format("woff2");font-display:swap}
 @font-face{font-family:"Nunito";src:url(nunito.woff2) format("woff2");font-weight:200 1000;font-display:swap}
 :root{--bg:#211a57;--panel:#2e2573;--panel2:#3b3189;--edge:#140f3a;--drop:#110c33;--ink:#fff;--dark:#1a1442;--mut:#b4a9ec;--lav:#c4b5ff;
---red:#ec3a5c;--violet:#8b5cf6;--blue:#2f7be8;--acc:#b88cff;--green:#2fd38a;--purple:#a66bff;
+--red:#ec3a5c;--violet:#8b5cf6;--blue:#2f7be8;--acc:#ffd23c;--green:#2fd38a;--purple:#a66bff;
 --pink:var(--red);--cyan:var(--blue);--line:var(--edge);
 --disp:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
 color-scheme:dark;
 /* --acc : unique couleur d'accent de l'interface (équipe qui joue, scores, « Bien joué ! », étoiles, bouton principal…).
-   Le jaune, l'orange et le marron clair sont réservés aux thèmes Histoire, Sports et Arts (questions.json). */
+   Les couleurs des thèmes (questions.json) ne sont pas réutilisées ailleurs. */
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
