@@ -48,7 +48,7 @@ Ouvre `questions.json` et ajoute des lignes dans la liste `"questions"`, sans ou
 | `anecdote` | conseillé | Affichée après la réponse |
 | `groupe` | non | Étiquette de famille (ex. `capitales`). Les fausses propositions sont tirées parmi les réponses du même groupe : donne le même groupe aux questions du même type |
 | `annee` | non | `true` si la réponse est une année : les fausses propositions sont alors des années proches |
-| `fausses` | non | Liste d'au moins 3 fausses propositions à utiliser à la place du tirage automatique. Toutes les questions de niveau 4 et 5 en ont : des leurres choisis pour être crédibles face à l'indice de la question |
+| `fausses` | non | Liste d'au moins 3 fausses propositions à utiliser à la place du tirage automatique. Toutes les questions de niveau 3 à 5 en ont : des leurres choisis pour être crédibles face à l'indice de la question |
 
 Les thèmes et les noms de niveaux se modifient en haut du même fichier. Une erreur de virgule ou de guillemet rend le fichier illisible : l'application affiche alors un message d'erreur. Tu peux vérifier le fichier sur jsonlint.com avant de le déposer.
 
