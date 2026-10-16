@@ -24,7 +24,7 @@ Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt 
 
 1. Ouvre l'adresse du site sur la **TV** : un QR code s'affiche.
 2. Scanne-le avec le **smartphone** du Maître du Jeu : l'écran de configuration s'ouvre (équipes, tours, mode de jeu, niveau, timer).
-3. Lance la partie depuis le téléphone.
+3. Lance la partie depuis le téléphone. La TV affiche d'abord les règles du jeu ; quand les équipes les ont lues, touche **Lancer la partie** sur le téléphone pour passer à la première question.
 4. Pour chaque question, l'équipe peut répondre directement (5 points). Sinon, affiche les 4 propositions : touche sur le téléphone la proposition donnée par l'équipe, puis **Valider** (3 points si elle est juste, 1 point après un 50/50). La TV montre la bonne réponse et, si elle est fausse, la proposition choisie.
 
 Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'accueil (« Ajouter à l'écran d'accueil » dans le menu du navigateur), l'icône rouvre directement la télécommande. Pour utiliser un appareil comme écran TV à la place, ouvre `adresse-du-site/?tv`, ou touche le lien « Utiliser cet appareil comme écran TV » en bas de l'écran de configuration.
