@@ -27,7 +27,8 @@ document.body.classList.toggle('tv',TV);document.documentElement.classList.toggl
 
 /* ---------- État ---------- */
 let THEMES=[],LV=[],Q=[],QMAP=new Map();
-let cfg=Object.assign({teams:['Équipe 1','Équipe 2'],rounds:5,level:2,timerOn:false,timerSec:30},lsGet('qt-cfg')||{});
+let cfg=Object.assign({teams:['Équipe 1','Équipe 2'],rounds:5,level:2,mode:'std',levels:[1,2,3,4,5],timerOn:false,timerSec:30},lsGet('qt-cfg')||{});
+if(!Array.isArray(cfg.levels))cfg.levels=[1,2,3,4,5];
 if(!Array.isArray(cfg.teams)||cfg.teams.length<2)cfg.teams=['Équipe 1','Équipe 2'];
 cfg.teams=cfg.teams.slice(0,8).map(t=>String(t).slice(0,24));
 const saveCfg=()=>lsSet('qt-cfg',cfg);
@@ -38,11 +39,15 @@ const GK='quiz-time-games',CK='quiz-time-cur';
 
 /* ---------- Moteur (écran TV uniquement) ---------- */
 const qk=q=>q.q+'|'+q.a;
+/* Mode Crescendo : les tours sont répartis entre les niveaux choisis, du plus facile au plus difficile.
+   Ex. 5 tours sur les niveaux 1, 3 et 5 → 1, 1, 3, 3, 5 (les premiers niveaux reçoivent les tours en plus). */
+const lvPlan=(lv,rounds)=>Array.from({length:rounds},(_,r)=>lv[Math.floor(r*lv.length/rounds)]);
+const curLv=()=>S.lvl?S.lvl[S.round]:S.level;
 function pick(th){
   const pool=Q.filter(q=>q.th==th);let c=pool.filter(q=>!S.used.has(q));
   if(!c.length){pool.forEach(q=>S.used.delete(q));c=pool}
-  const d=Math.min(...c.map(q=>Math.abs(q.l-S.level)));
-  const r=c.filter(q=>Math.abs(q.l-S.level)==d);
+  const L=curLv(),d=Math.min(...c.map(q=>Math.abs(q.l-L)));
+  const r=c.filter(q=>Math.abs(q.l-L)==d);
   const q=r[Math.random()*r.length|0];S.used.add(q);return q;
 }
 function mkOpts(q){
@@ -66,10 +71,12 @@ const tlNow=()=>S&&S.tt?Math.max(0,Math.min(S.tt*1000,S.tEnd-Date.now())):0;
 function startGame(c){
   const teams=(c.teams||[]).map(n=>String(n).trim().slice(0,24)).filter(Boolean).slice(0,8);
   if(teams.length<2)return;
-  const rounds=Math.max(1,Math.min(30,+c.rounds||5)),level=Math.max(1,Math.min(LV.length,+c.level||2));
+  const lv=c.mode=='cresc'&&Array.isArray(c.levels)?[...new Set(c.levels.map(Number))].filter(l=>l>=1&&l<=LV.length).sort((a,b)=>a-b):[];
+  const cr=lv.length>=2;
+  const rounds=Math.max(cr?lv.length:1,Math.min(30,+c.rounds||5)),level=cr?lv[0]:Math.max(1,Math.min(LV.length,+c.level||2));
   let tt=Math.round(+c.timer||0);tt=tt>0?Math.max(5,Math.min(300,tt)):0;
   const bag=[];while(bag.length<rounds)bag.push(...shuf(THEMES.map((_,i)=>i)));
-  S={gid:Date.now(),date:Date.now(),teams:teams.map(n=>({n,s:0})),rounds,level,tt,tEnd:0,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),phase:'q',opts:null,hid:[],pts:0};
+  S={gid:Date.now(),date:Date.now(),teams:teams.map(n=>({n,s:0})),rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),phase:'q',opts:null,hid:[],pts:0};
   S.q=pick(S.themes[0]);armTimer(true);scr='game';
 }
 function next(){
@@ -77,7 +84,7 @@ function next(){
   if(S.round>=S.rounds){scr='end';return}
   S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.pick=null;S.phase='q';armTimer(true);
 }
-const pub=()=>S&&{teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,th:S.themes[S.round],
+const pub=()=>S&&{teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,lv:curLv(),cr:!!S.lvl,th:S.themes[S.round],
   q:S.q?{q:S.q.q,a:S.q.a,l:S.q.l,f:S.q.f}:null,phase:S.phase,opts:S.opts,hid:S.hid,pts:S.pts,pick:S.pick,tt:S.tt||0,tl:tlNow(),
   last:S.round==S.rounds-1&&S.ti==S.teams.length-1};
 
@@ -114,7 +121,7 @@ function restore(g){
 const findG=id=>(lsGet(GK)||[]).find(g=>g.id==id);
 const loadS=()=>restore(findG(lsGet(CK)));
 const gsum=()=>(lsGet(GK)||[]).filter(g=>g&&g.S&&Array.isArray(g.S.teams))   /* ignore une sauvegarde abîmée au lieu de bloquer l'envoi */
-  .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',teams:g.S.teams}));
+  .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',cr:!!g.S.lvl,teams:g.S.teams}));
 
 /* ---------- Transport ----------
    Mise en relation via ntfy.sh, puis liaison directe WebRTC (canal de données) par le Wi-Fi : le quota gratuit de ntfy.sh
@@ -378,7 +385,10 @@ function ctlInit(){
 const cmd=(t,p)=>say({t,p});
 function go(){
   if(cfg.teams.map(n=>n.trim()).filter(Boolean).length<2){alert('Ajoutez au moins deux équipes.');return}
-  say({t:'start',cfg:{teams:cfg.teams,rounds:cfg.rounds,level:cfg.level,timer:cfg.timerOn?cfg.timerSec:0}});
+  const cr=cfg.mode=='cresc';
+  if(cr&&cfg.levels.length<2){alert('Choisissez au moins deux niveaux pour le mode Crescendo.');return}
+  if(cr&&cfg.rounds<cfg.levels.length){alert('Le mode Crescendo demande au moins un tour par niveau : '+plural(cfg.levels.length,'tour')+' minimum.');return}
+  say({t:'start',cfg:{teams:cfg.teams,rounds:cfg.rounds,mode:cr?'cresc':'std',level:cfg.level,levels:cfg.levels,timer:cfg.timerOn?cfg.timerSec:0}});
 }
 
 /* ---------- Timer (affichage) ---------- */
@@ -401,8 +411,10 @@ function teamOverlay(){
   lastKey=key;
   if(S.phase!='q')return;
   const th=THEMES[S.themes[S.round]];
+  /* Crescendo : au début de la partie et à chaque passage au niveau supérieur, l'animation annonce le niveau. */
+  const L=curLv(),up=S.lvl&&S.ti==0&&(S.round==0||S.lvl[S.round-1]!=L);
   const d=document.createElement('div');d.className='ovl';
-  d.innerHTML=`<div class="ovl-in"><span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="color:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
+  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="color:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
   document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);
 }
 
@@ -415,11 +427,14 @@ function renderSetup(){
     <button class="btn mut" onclick="addTeam()" ${cfg.teams.length>=8?'disabled':''}>+ Ajouter une équipe</button>
   </section>
   <section class="card"><h3>Nombre de tours</h3>
-    <div class="row" style="align-items:center"><input type="number" min="1" max="30" value="${cfg.rounds}" aria-label="Nombre de tours" oninput="cfg.rounds=Math.max(1,Math.min(30,+this.value||1));saveCfg()"><span class="sub">Un tour = une question par équipe</span></div>
+    <div class="row" style="align-items:center"><input type="number" min="1" max="30" value="${cfg.rounds}" aria-label="Nombre de tours" oninput="cfg.rounds=Math.max(1,Math.min(30,+this.value||1));saveCfg();const p=document.getElementById('plan');if(p)p.innerHTML=planHTML()"><span class="sub">Un tour = une question par équipe</span></div>
   </section>
-  <section class="card"><h3>Niveau de difficulté</h3>
+  <section class="card"><h3>Mode de jeu</h3>
+    <div class="lv">${[['std','Standard','Un seul niveau'],['cresc','Crescendo','Niveau croissant']].map(([m,n,d])=>`<button class="btn ${cfg.mode==m?'on':''}" onclick="cfg.mode='${m}';saveCfg();render()"><b>${n}</b><i>${d}</i></button>`).join('')}</div>
+  </section>
+  ${cfg.mode=='cresc'?crescHTML():`<section class="card"><h3>Niveau de difficulté</h3>
     <div class="lv">${LV.map((l,i)=>`<button class="btn ${cfg.level==i+1?'on':''}" onclick="cfg.level=${i+1};saveCfg();render()"><b>${i+1}</b><i>${esc(l)}</i></button>`).join('')}</div>
-  </section>
+  </section>`}
   <section class="card"><h3>Timer</h3>
     <label class="chk"><input type="checkbox" ${cfg.timerOn?'checked':''} onchange="cfg.timerOn=this.checked;saveCfg();render()"><span>Compte à rebours pour chaque question</span></label>
     ${cfg.timerOn?`<div class="row" style="align-items:center"><input type="number" min="5" max="300" value="${cfg.timerSec}" aria-label="Durée en secondes" oninput="cfg.timerSec=Math.max(5,Math.min(300,+this.value||30));saveCfg()"><span class="sub">secondes par question (5 à 300)</span></div>`:''}
@@ -427,13 +442,30 @@ function renderSetup(){
   <button class="btn pink big" onclick="go()">Lancer la partie</button>${savedHTML()}
   <p class="foot sub"><span id="lnk">${esc(lnkTxt())}</span><br><a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
 }
+/* Mode Crescendo : choix des niveaux (au moins deux) et aperçu de la répartition des tours. */
+function crescHTML(){
+  return `<section class="card"><h3>Niveaux du Crescendo</h3>
+    <p class="sub" style="margin:0 0 12px">Choisissez au moins deux niveaux : la partie commence par le plus facile et finit par le plus difficile.</p>
+    <div class="lv">${LV.map((l,i)=>`<button class="btn ${cfg.levels.includes(i+1)?'on':''}" onclick="togLv(${i+1})"><b>${i+1}</b><i>${esc(l)}</i></button>`).join('')}</div>
+    <p class="sub plan" id="plan">${planHTML()}</p>
+  </section>`;
+}
+function togLv(l){cfg.levels=cfg.levels.includes(l)?cfg.levels.filter(x=>x!=l):[...cfg.levels,l].sort((a,b)=>a-b);saveCfg();render()}
+function planHTML(){
+  const lv=cfg.levels,n=cfg.rounds;
+  if(lv.length<2)return'Sélectionnez au moins deux niveaux.';
+  if(n<lv.length)return'⚠ Il faut au moins '+plural(lv.length,'tour')+' (un par niveau).';
+  const p=lvPlan(lv,n),out=[];
+  for(let r=0;r<n;){let e=r;while(e+1<n&&p[e+1]==p[r])e++;out.push((r==e?'Tour '+(r+1):'Tours '+(r+1)+' à '+(e+1))+' : '+esc(LV[p[r]-1]));r=e+1}
+  return out.join('<br>');
+}
 const addTeam=()=>{cfg.teams.push('Équipe '+(cfg.teams.length+1));saveCfg();render()};
 const rmTeam=i=>{if(cfg.teams.length>2){cfg.teams.splice(i,1);saveCfg();render()}};
 
 const fmtD=t=>new Date(t).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 function savedHTML(){
   if(!gl.length)return'';
-  const row=g=>`<div class="anec" style="margin:0"><b>${fmtD(g.date)} · ${g.done?'Terminée':'Tour '+(g.round+1)+' / '+g.rounds}</b><p>${[...g.teams].sort((a,b)=>b.s-a.s).map(t=>esc(t.n)+' '+t.s).join(' · ')}</p><div class="row" style="margin:8px 0 0">${g.done?'':`<button class="btn" onclick="cmd('resume',${+g.id})">Reprendre</button>`}<button class="btn x" onclick="if(confirm('Supprimer cette partie ?'))cmd('del',${+g.id})">Supprimer</button></div></div>`;
+  const row=g=>`<div class="anec" style="margin:0"><b>${fmtD(g.date)} · ${g.cr?'Crescendo · ':''}${g.done?'Terminée':'Tour '+(g.round+1)+' / '+g.rounds}</b><p>${[...g.teams].sort((a,b)=>b.s-a.s).map(t=>esc(t.n)+' '+t.s).join(' · ')}</p><div class="row" style="margin:8px 0 0">${g.done?'':`<button class="btn" onclick="cmd('resume',${+g.id})">Reprendre</button>`}<button class="btn x" onclick="if(confirm('Supprimer cette partie ?'))cmd('del',${+g.id})">Supprimer</button></div></div>`;
   return `<section class="card"><h3>Parties enregistrées</h3><div style="display:grid;gap:10px">${gl.map(row).join('')}</div></section>`;
 }
 function board(s,cur){
@@ -442,7 +474,7 @@ function board(s,cur){
 }
 function head(s){
   const th=THEMES[s.th],dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
-  return `<div class="bar" style="margin-bottom:16px"><span>Tour ${s.round+1} / ${s.rounds}</span><span class="dots">${dots}</span></div>
+  return `<div class="bar" style="margin-bottom:16px"><span>Tour ${s.round+1} / ${s.rounds}${s.cr?' · Crescendo':''}</span><span class="dots">${dots}</span></div>
   <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>`;
 }
 /* mark : montre la bonne réponse (✓) et, une fois la réponse donnée, la proposition choisie si elle est fausse (✗). */
@@ -491,7 +523,7 @@ function tvTop(s){
   const dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
   const r=s.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.s-a.s||a.i-b.i);
   const chips=r.map((t,k)=>`<div class="chip ${t.i==s.ti?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><b>${t.s}</b></div>`).join('');
-  return `<div class="tvhead"><div class="tvtour"><span>Tour ${s.round+1} / ${s.rounds}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
+  return `<div class="tvhead"><div class="tvtour"><span>Tour ${s.round+1} / ${s.rounds}${s.cr?' · Niveau '+s.lv+' '+esc(LV[s.lv-1]):''}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
 }
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];

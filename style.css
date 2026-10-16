@@ -32,6 +32,7 @@ text-shadow:0 0 4px color-mix(in srgb,var(--c) 45%,transparent);box-shadow:0 0 8
 .lv button{flex:1;min-width:92px;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}
 .lv button.on{background:var(--c);color:#0a0820;text-shadow:none}
 .lv b{font-size:1.3rem}.lv i{font-style:normal;font-size:.8rem}
+.plan{margin:14px 0 0;line-height:1.6}
 .foot{text-align:center;margin:8px 0 0;font-size:.85rem;line-height:1.8}
 .foot a{color:var(--mut)}
 .grid{display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start}
@@ -145,6 +146,7 @@ body.tv .score li{padding:.7rem 1rem}
 .ovl-in span{color:var(--mut);font-size:clamp(1.2rem,2.6vw,2rem)}
 .ovl-in b{font-size:clamp(3rem,10vw,8rem);line-height:1;color:var(--pink);text-shadow:0 0 8px rgba(255,60,172,.5)}
 .ovl-in i{font-style:normal;font-weight:600;font-size:clamp(1.4rem,3vw,2.4rem)}
+.ovl-in em{font-style:normal;font-weight:700;font-size:clamp(1.3rem,2.8vw,2.2rem);color:var(--green);text-shadow:0 0 6px rgba(77,255,157,.4)}
 @keyframes ovl{0%{opacity:0}12%{opacity:1}82%{opacity:1}100%{opacity:0}}
 @keyframes ovlin{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 

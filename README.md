@@ -23,13 +23,18 @@ Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt 
 ## Utilisation
 
 1. Ouvre l'adresse du site sur la **TV** : un QR code s'affiche.
-2. Scanne-le avec le **smartphone** du Maître du Jeu : l'écran de configuration s'ouvre (équipes, tours, niveau, timer).
+2. Scanne-le avec le **smartphone** du Maître du Jeu : l'écran de configuration s'ouvre (équipes, tours, mode de jeu, niveau, timer).
 3. Lance la partie depuis le téléphone.
 4. Pour chaque question, l'équipe peut répondre directement (5 points). Sinon, affiche les 4 propositions : touche sur le téléphone la proposition donnée par l'équipe, puis **Valider** (3 points si elle est juste, 1 point après un 50/50). La TV montre la bonne réponse et, si elle est fausse, la proposition choisie.
 
 Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'accueil (« Ajouter à l'écran d'accueil » dans le menu du navigateur), l'icône rouvre directement la télécommande. Pour utiliser un appareil comme écran TV à la place, ouvre `adresse-du-site/?tv`, ou touche le lien « Utiliser cet appareil comme écran TV » en bas de l'écran de configuration.
 
 À la fin d'une partie, la TV garde le classement affiché (même après un rechargement) jusqu'à ce que le Maître du Jeu touche « Nouvelle partie » sur son téléphone. Si le téléphone n'est plus connecté, la TV affiche un QR code au-dessus du classement : il suffit de le scanner puis de toucher « Nouvelle partie ». Ouvrir `adresse-du-site/?tv` sur la TV efface aussi la partie en cours et revient à l'écran d'accueil.
+
+## Modes de jeu
+
+- **Standard** : toutes les questions sont du niveau choisi.
+- **Crescendo** : choisis au moins deux niveaux. La partie commence par le plus facile et finit par le plus difficile ; les tours sont répartis entre les niveaux choisis (il faut au moins un tour par niveau). Par exemple, 7 tours sur les niveaux 1, 3 et 5 donnent : tours 1 à 3 en Très facile, tours 4 et 5 en Moyen, tours 6 et 7 en Expert. L'écran de configuration affiche cette répartition, et la TV annonce chaque passage au niveau supérieur.
 
 ## Ajouter des questions
 
