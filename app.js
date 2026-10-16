@@ -395,13 +395,16 @@ function go(){
 
 /* ---------- Timer (affichage) ---------- */
 const tmrHTML=s=>s&&s.tt&&s.phase!='r'?`<div class="tmr" id="tmr"><div class="tmr-bar"><i id="tmrb"></i></div><span id="tmrv">${s.tt} s</span></div>`:'';
+/* Écran TV : compte à rebours circulaire, à droite de la question */
+const tmrRing=s=>s.tt&&s.phase!='r'?`<div class="ring" id="tmr"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18.5" pathLength="100"/><circle id="tmrc" cx="22" cy="22" r="18.5" pathLength="100"/></svg><b id="tmrv">${s.tt}</b><span>sec</span></div>`:'';
 function tick(){
   const box=document.getElementById('tmr');if(!box)return;
   const s=TV?pub():st;if(!s||!s.tt)return;
   const ms=TV?s.tl:Math.max(0,s.tl-(Date.now()-recvAt));
   const sec=Math.ceil(ms/1000);
-  document.getElementById('tmrv').textContent=ms<=0?'Temps écoulé !':sec+' s';
-  document.getElementById('tmrb').style.width=Math.min(100,ms/(s.tt*1000)*100)+'%';
+  const pc=Math.min(100,ms/(s.tt*1000)*100),ring=document.getElementById('tmrc');
+  if(ring){document.getElementById('tmrv').textContent=sec;ring.style.strokeDashoffset=100-pc}
+  else{document.getElementById('tmrv').textContent=ms<=0?'Temps écoulé !':sec+' s';document.getElementById('tmrb').style.width=pc+'%'}
   box.classList.toggle('low',ms>0&&sec<=5);box.classList.toggle('zero',ms<=0);
 }
 
@@ -417,9 +420,23 @@ function teamOverlay(){
   /* Crescendo : au début de la partie et à chaque passage au niveau supérieur, l'animation annonce le niveau. */
   const L=curLv(),up=S.lvl&&S.ti==0&&(S.round==0||S.lvl[S.round-1]!=L);
   const d=document.createElement('div');d.className='ovl';
-  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="color:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
+  d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${th.e} ${esc(th.n)}</i></div>`;
   document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);
 }
+
+/* ---------- Habillage « jeu » : icônes et propositions ---------- */
+const SV=d=>`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const ICO={ok:SV('<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>'),no:SV('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
+  bulb:SV('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>'),
+  star:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>'};
+/* Une proposition : sa lettre dans le carré de gauche. st = '' (en jeu), 'ok' (bonne réponse révélée, ✓),
+   'bad' (réponse fausse donnée, ✕), 'no' (autre proposition révélée), 'off' (retirée par le 50/50). Les couleurs vert et rouge sont réservées à ok et bad. */
+function tile(o,i,st,tag,pick){
+  const inner=`<span class="sh">${st=='ok'?ICO.ok:st=='bad'?ICO.no:'ABCD'[i]||''}</span><span class="ot">${esc(o)}</span>${tag?`<span class="otag">${tag}</span>`:''}`;
+  return pick?`<button class="opt pk c${i} ${st} ${sel==i?'sel':''}" ${st=='off'?'disabled':''} onclick="sel=${i};render()">${inner}</button>`:`<div class="opt c${i} ${st}">${inner}</div>`;
+}
+/* Étoile à pointes du résultat (« +3 ») */
+const BURST=Array.from({length:24},(_,k)=>{const a=k*Math.PI/12-Math.PI/2,r=k%2?35:48;return(50+r*Math.cos(a)).toFixed(1)+','+(50+r*Math.sin(a)).toFixed(1)}).join(' ');
 
 /* ---------- Vues ---------- */
 function renderSetup(){
@@ -480,22 +497,32 @@ function head(s){
   return `<div class="bar" style="margin-bottom:16px"><span>Tour ${s.round+1} / ${s.rounds}${s.cr?' · Crescendo':''}</span><span class="dots">${dots}</span></div>
   <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>`;
 }
-/* mark : montre la bonne réponse (✓) et, une fois la réponse donnée, la proposition choisie si elle est fausse (✗). */
-function optsHTML(s,mark){
-  const bad=o=>mark&&s.phase=='r'&&s.pick==o&&o!=s.q.a;
-  return s.opts?`<div class="opts">${s.opts.map((o,i)=>`<div class="opt ${mark&&o==s.q.a?'ok':''} ${bad(o)?'bad':''} ${s.hid.includes(o)?'off':''}">${esc(o)}${mark&&o==s.q.a?' ✓':bad(o)?' ✗':''}</div>`).join('')}</div>`:'';
+/* Propositions. Une fois la réponse donnée (phase r) : la bonne en vert, la réponse fausse choisie en rouge, les autres en retrait.
+   Réponse directe (sans propositions) : la bonne réponse s'affiche seule. */
+function optsHTML(s){
+  const r=s.phase=='r';
+  if(!s.opts)return r?`<div class="opts one">${tile(s.q.a,0,'ok','Bonne réponse')}</div>`:'';
+  return `<div class="opts">${s.opts.map((o,i)=>{
+    const st=r?(o==s.q.a?'ok':o==s.pick?'bad':s.hid.includes(o)?'off':'no'):s.hid.includes(o)?'off':'';
+    return tile(o,i,st,st=='ok'?'Bonne réponse':st=='bad'?'Réponse donnée':'')}).join('')}</div>`;
 }
 /* Télécommande : le Maître du Jeu touche la proposition donnée par l'équipe, puis valide. */
 let sel=null,selKey='';
 function pickHTML(s){
-  return `<div class="opts">${s.opts.map((o,i)=>{const off=s.hid.includes(o);
-    return `<button class="opt pk ${o==s.q.a?'ok':''} ${sel==i?'sel':''} ${off?'off':''}" ${off?'disabled':''} onclick="sel=${i};render()">${esc(o)}${o==s.q.a?' ✓':''}</button>`}).join('')}</div>`;
+  return `<div class="opts">${s.opts.map((o,i)=>tile(o==s.q.a?o+' ✓':o,i,s.hid.includes(o)?'off':'','',true)).join('')}</div>`;
 }
 const answer=c=>{sel=null;say({t:'ans',c})};   /* c (choix), pas o : o est réservé à l'offre WebRTC */
-const verdict=s=>s.pts?`<div class="res good">Bonne réponse ! +${plural(s.pts,'point')}</div>`:`<div class="res bad">Mauvaise réponse · c'était : ${esc(s.q.a)}</div>`;
+/* Écran TV, réponse révélée : points marqués et « Le saviez-vous ? » sur la même ligne */
+function resultRow(s){
+  const ok=s.pts>0;
+  const card=`<div class="rcard ${ok?'good':'miss'}"><div class="burst"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="${BURST}"/></svg><b>${ok?'+'+s.pts:'0'}</b></div>
+    <div><h3>${ok?'Bien joué !':'Dommage !'}</h3><p>${ok?esc(s.teams[s.ti].n)+' empoche '+plural(s.pts,'point'):'Pas de point pour '+esc(s.teams[s.ti].n)+' cette fois'}</p></div></div>`;
+  const fact=s.q.f?`<div class="fact"><span class="bulb">${ICO.bulb}</span><div><h3>Le saviez-vous ?</h3><p>${esc(s.q.f)}</p></div></div>`:'';
+  return `<div class="rrow ${fact?'':'solo'}">${card}${fact}</div>`;
+}
 function endHTML(s,ctl){
   const top=Math.max(...s.teams.map(t=>t.s)),w=s.teams.filter(t=>t.s==top).map(t=>t.n);
-  return `<div class="end"><p class="sub">${w.length>1?'Égalité entre':'Victoire de'}</p><div class="win">🏆 ${esc(w.join(' & '))}</div>
+  return `<div class="end"><p class="sub">${w.length>1?'Égalité entre':'Victoire de'}</p><div class="win"><i class="emo">🏆</i> ${esc(w.join(' & '))}</div>
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
 const netHTML=()=>`<p class="st sub" style="font-size:.85rem">${esc(lnkTxt())}</p><p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc((net.fail=='429'?'service saturé (429)':net.fail)+(net.why?' « '+net.why+' »':'')+(outQ.length?', nouvel essai en cours':'')):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p><p class="st sub" style="font-size:.85rem">Relais : ntfy.sh ${esc(net.ntfy||'…')} · Nostr ${nLive()}/${nr.length} connecté(s)</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture de secours : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
@@ -522,11 +549,11 @@ function tvWait(){
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu</p>${s}<p class="url">${esc(joinUrl)}</p></div>`;
 }
+/* Bandeau du haut : tour en cours (une étoile par tour, jusqu'à 12 tours) et équipes, celle qui joue en orange. */
 function tvTop(s){
-  const dots=Array.from({length:s.rounds},(_,i)=>`<i class="${i<s.round?'d':i==s.round?'c':''}"></i>`).join('');
-  const r=s.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.s-a.s||a.i-b.i);
-  const chips=r.map((t,k)=>`<div class="chip ${t.i==s.ti?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><b>${t.s}</b></div>`).join('');
-  return `<div class="tvhead"><div class="tvtour"><span>Tour ${s.round+1} / ${s.rounds}${s.cr?' · Niveau '+s.lv+' '+esc(LV[s.lv-1]):''}</span><span class="dots">${dots}</span></div><div class="tvscore">${chips}</div></div>`;
+  const stars=s.rounds<=12?`<span class="stars">${Array.from({length:s.rounds},(_,i)=>`<i class="${i<=s.round?'on':''}">${ICO.star}</i>`).join('')}</span>`:'';
+  const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
+  return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span>${stars}</div><div class="tvscore">${chips}</div></div>`;
 }
 function tvRules(){
   const P=(t,d,x)=>`<div class="rpt"><b>${t}</b><span><strong>${d}</strong> ${x}</span></div>`;
@@ -548,9 +575,8 @@ function tvRules(){
 }
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
-  return `${tvTop(s)}<div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div>${tmrHTML(s)}<div class="theme" style="--c:${th.c}">${th.e} ${esc(th.n)}</div></div>
-  <section class="card qcard"><h2 class="q">${esc(q.q)}</h2>${optsHTML(s,r)}
-  ${r?`${verdict(s)}<div class="anec"><b>Réponse : ${esc(q.a)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`:''}</section>`;
+  const tag=`<span class="qtag" style="--c:${th.c}">${th.e} ${esc(th.n)}${s.cr?' · Niveau '+s.lv:''}</span>`;
+  return `${tvTop(s)}<section class="qcard ${r?'mini':''}">${tag}<h2 class="q">${esc(q.q)}</h2>${tmrRing(s)}</section>${optsHTML(s)}${r?resultRow(s):''}`;
 }
 function ctlGame(s){
   if(s.phase=='rules')return `<div class="setup"><section class="card"><h3>Règles du jeu</h3><p>Les règles sont affichées sur la TV. Laissez les équipes les lire, puis lancez la première question.</p>
@@ -567,7 +593,7 @@ function ctlGame(s){
       +(s.phase=='m'?B('','50/50',"cmd('fifty')"):'')+B('mut','Pas de réponse','answer(null)');
   }
   else b=`<div class="anec"><b>${s.pts?'+'+plural(s.pts,'point'):'0 point'} pour ${esc(s.teams[s.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',s.last?'Voir le classement final':'Question suivante',"cmd('next')");
-  const opts=(s.phase=='m'||s.phase=='f')?pickHTML(s):optsHTML(s,true);
+  const opts=(s.phase=='m'||s.phase=='f')?pickHTML(s):optsHTML(s);
   return `<div class="grid"><main>${head(s)}<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${tmrHTML(s)}<h2 class="q">${esc(q.q)}</h2>
   <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${opts}<div class="acts">${b}</div></section><div class="ctlbar"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...s,i0:s.ti},true)}</div>`;
 }
