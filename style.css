@@ -60,16 +60,16 @@ font-family:var(--disp);font-size:1rem;letter-spacing:.03em;text-transform:upper
 /* Propositions : tuiles de couleur, forme à gauche, lettre à droite */
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
 .opts.one{grid-template-columns:1fr}
-.opt{--oc:var(--violet);--ot:#fff;display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;background:var(--oc);color:var(--ot);
+.opt{--oc:var(--panel2);--ot:#fff;display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;background:var(--oc);color:var(--ot);
 border:3px solid var(--edge);border-radius:18px;box-shadow:0 6px 0 var(--drop);font-family:"Nunito",sans-serif;font-weight:800;font-size:1.15rem;line-height:1.2;text-align:left;transition:opacity .3s,transform .2s}
-.c1{--oc:var(--yel);--ot:var(--dark)}.c2{--oc:#ff6fd8;--ot:var(--dark)}.c3{--oc:#22d3ee;--ot:var(--dark)}   /* A violet, B jaune, C rose, D bleu : ni vert ni rouge (réservés à la réponse), ni orange (équipe qui joue) */
+/* Propositions toutes en violet, texte blanc : seules la bonne réponse (vert) et la réponse fausse donnée (rouge) ressortent en couleur. */
 .opt .sh{flex:none;display:grid;place-items:center;width:2.3em;height:2.3em;border-radius:12px;background:rgba(0,0,0,.16);font-family:var(--disp);font-weight:400;font-size:1.05em}
 .opt .sh svg{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
 .opt .ot{flex:1;min-width:0;overflow-wrap:anywhere}
 .opt .otag{flex:none;font-family:var(--disp);font-weight:400;background:var(--edge);color:var(--green);border-radius:10px;padding:.35em .7em;font-size:.62em;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
 .opt.off{opacity:.2;filter:grayscale(.7)}
-.opt.no{--oc:var(--panel2);--ot:var(--mut)}
-.opt.no .sh{background:rgba(0,0,0,.18)}
+.opt.no{--oc:var(--panel);--ot:var(--mut)}   /* propositions écartées à la révélation : plus sombres */
+.opt.no .sh{background:rgba(0,0,0,.22)}
 .opt.bad{--oc:var(--red);--ot:#fff}.opt.bad .otag{color:#ffb3c2}
 .opt.ok{--oc:var(--green);--ot:var(--dark);border-color:#fff;box-shadow:0 0 0 4px var(--edge),0 9px 0 var(--drop);transform:rotate(-.8deg) scale(1.02);position:relative;z-index:1}
 .opt.ok .sh{background:#fff;border:3px solid var(--edge)}
