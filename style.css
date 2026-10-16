@@ -62,6 +62,8 @@ text-shadow:0 0 4px color-mix(in srgb,var(--c) 45%,transparent);box-shadow:0 0 8
 .qcard{display:flex;flex-direction:column;row-gap:18px;padding:24px}
 .qcard.qcard.qcard>*,.qcard.qcard .acts>.anec{margin:0}   /* sélecteur renforcé : passe devant body.tv .q, body.tv .opts, body.tv .res… */
 .qcard>.tmr{flex:none}
+/* Pause / Terminer sous la carte : pleine largeur, côte à côte si la place le permet */
+.ctlbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
 .anec{border-left:4px solid var(--pink);background:rgba(255,60,172,.08);border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:20px}
 .anec p{margin:4px 0 0;color:var(--ink)}.anec b{color:var(--pink)}
 .score h3{color:var(--pink);text-shadow:0 0 6px rgba(255,60,172,.3)}
