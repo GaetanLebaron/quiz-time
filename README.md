@@ -11,6 +11,7 @@ Application de quiz pour un Maître du Jeu : un **écran TV** affiche les questi
 | `app.js` | Logique du jeu |
 | `questions.json` | **Toutes les questions**, thèmes et niveaux |
 | `qrcode.js` | Génération du QR code |
+| `lilita-one.woff2`, `nunito.woff2` | Polices (Lilita One et Nunito, licence SIL Open Font License) |
 | `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png` | Installation sur l'écran d'accueil (PWA) |
 
 Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt GitHub.
