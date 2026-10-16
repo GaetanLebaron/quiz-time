@@ -164,7 +164,7 @@ body.tv .qcard.mini .q{font-size:1.6rem}
 .ring{position:relative;flex:none;display:grid;place-content:center;justify-items:center;width:7rem;height:7rem;color:var(--dark);--c:var(--acc)}
 .ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:4.5}
-.ring circle:first-child{display:none}   /* ni contour ni fond : seuls le chiffre et l'arc du temps restant */
+.ring circle:first-child{stroke:var(--edge);opacity:.1}   /* piste du compteur en transparence, sous l'arc du temps restant */
 .ring circle+circle{stroke:var(--c);stroke-dasharray:100;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
 .ring b{position:relative;font-family:var(--disp);font-weight:400;font-size:2.8rem;line-height:1}
 .ring.low{--c:var(--red)}.ring.zero{--c:var(--red)}.ring.zero b{animation:pulse .8s ease-in-out infinite}
