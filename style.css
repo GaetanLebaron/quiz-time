@@ -243,16 +243,16 @@ body.tv .end .score .pt{font-size:2.3rem;line-height:1.1}
   .rrow{grid-template-columns:1fr}
 }
 
-/* Animation de changement d'équipe (écran TV) */
-.ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovl 2s ease forwards;
-background:radial-gradient(rgba(255,255,255,.08) 1.4px,transparent 1.8px) 0 0/30px 30px,rgba(33,26,87,.97)}
+/* Animation de changement d'équipe (écran TV) : même fond que l'application (pois de même taille, hérités de body),
+   opaque dès la première image pour que la question derrière ne se voie pas ; seul le fondu de sortie la révèle. */
+.ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovl 2s ease forwards;background:inherit}
 .ovl-in{display:grid;gap:1.2rem;justify-items:center;animation:ovlin .6s cubic-bezier(.2,1.5,.4,1) both}
 .ovl-in span{font-family:var(--disp);color:var(--lav);font-size:clamp(1.2rem,2.6vw,2.2rem);text-transform:uppercase;letter-spacing:.05em}
 .ovl-in b{font-family:var(--disp);font-weight:400;font-size:clamp(3rem,10vw,8rem);line-height:1;color:#fff;text-shadow:0 .4rem 0 var(--drop)}
 .ovl-in i{--c:var(--purple);font-style:normal;font-family:var(--disp);font-size:clamp(1.3rem,2.8vw,2.3rem);text-transform:uppercase;letter-spacing:.03em;
 background:var(--c);color:var(--dark);border:.2rem solid var(--edge);border-radius:.9rem;padding:.3rem 1.1rem;box-shadow:0 .3rem 0 var(--drop);transform:rotate(-2deg)}
 .ovl-in em{font-style:normal;font-family:var(--disp);font-size:clamp(1.2rem,2.6vw,2rem);text-transform:uppercase;background:var(--green);color:var(--dark);border:.2rem solid var(--edge);border-radius:.8rem;padding:.25rem 1rem}
-@keyframes ovl{0%{opacity:0}12%{opacity:1}82%{opacity:1}100%{opacity:0}}
+@keyframes ovl{0%,82%{opacity:1}100%{opacity:0}}
 @keyframes ovlin{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 
 /* Règles du jeu (écran TV, avant la première question) : tout tient sur un écran */
