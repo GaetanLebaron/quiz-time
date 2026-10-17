@@ -338,6 +338,8 @@ body.tv .fres+.fact{margin-top:0}
 .tvpick b{font-weight:400;font-size:2rem}.tvpick i{font-style:normal;font-family:"Nunito",sans-serif;font-weight:800;font-size:1rem;opacity:.85}
 /* TV : bouton de réinitialisation placé sous le bas de l'écran */
 .tvmain{min-height:100vh}
-.tvreset{text-align:center;display:grid;justify-items:center;gap:.6rem;padding:2rem 0 1rem}.tvreset p{margin:0;font-size:.85rem}
+.tvreset{text-align:center;display:grid;justify-items:center;gap:.8rem;padding:clamp(4rem,25vh,14rem) 0 1.5rem}.tvreset p{margin:0;font-size:.85rem}
+.tvreset .tvrq{font-size:1.1rem;font-weight:900}.tvrb{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.tvreset button:focus{outline:.3rem solid var(--acc);outline-offset:.3rem}
 /* Question : retours à la ligne équilibrés (pas de mot seul en dernière ligne quand le navigateur le permet) */
 .q{text-wrap:pretty}
