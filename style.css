@@ -339,3 +339,5 @@ body.tv .fres+.fact{margin-top:0}
 /* TV : bouton de réinitialisation placé sous le bas de l'écran */
 .tvmain{min-height:100vh}
 .tvreset{text-align:center;display:grid;justify-items:center;gap:.6rem;padding:2rem 0 1rem}.tvreset p{margin:0;font-size:.85rem}
+/* Question : retours à la ligne équilibrés (pas de mot seul en dernière ligne quand le navigateur le permet) */
+.q{text-wrap:pretty}
