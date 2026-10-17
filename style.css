@@ -299,6 +299,7 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
    Partie sans Maître du Jeu (libre.js) : téléphones des équipes et écran TV
    ========================================================================== */
 .fstack{display:grid;gap:20px}
+.fstack+.fqr{margin-top:20px}   /* « Inviter une équipe » sous la question (hôte) */
 .fgame .ctx{justify-content:flex-start}
 .fgame .ctx .pill.ph{margin:0}
 .fgame .acts input[type=text]{width:100%;font-size:1.2rem}
