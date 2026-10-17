@@ -195,8 +195,10 @@ const qrURL=(n,u)=>{try{const q=qrcode(0,'M');q.addData(u||joinUrl);q.make();ret
 const lostBar=(t='Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.')=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem"><img alt="QR code" style="width:7rem;border-radius:.5rem;background:#fff;padding:.4rem" src="${qrURL(6)}"><span>${t}</span></div>`;
 /* Accueil de la TV : on choisit d'abord avec ou sans Maître du Jeu, puis le QR code s'affiche pour le téléphone qui configure. */
 let tvFm=null;
-/* Sur un téléphone, pas d'écran TV à scanner : il devient l'hôte de la partie (?host), se configure et montre le QR code aux équipes. */
-const PHONE=Math.min(screen.width,screen.height)<600;
+/* Sur un téléphone, pas d'écran TV à scanner : il devient l'hôte de la partie (?host), se configure et montre le QR code aux équipes.
+   Un petit écran ne suffit pas : l'appli Android TV annonce aussi 960 × 540. Un téléphone se reconnaît à son écran tactile (pointeur « grossier »),
+   que n'a pas une TV pilotée à la télécommande. */
+const PHONE=Math.min(screen.width,screen.height)<600&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
 function tvPickFree(){if(PHONE){lsSet(CK,null);location.href='?host';return}tvFm=true;push();render()}
 function tvWait(){
   if(tvFm==null&&!conn)return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2><p style="font-size:1.4rem;margin:0">Comment voulez-vous jouer ?</p>
