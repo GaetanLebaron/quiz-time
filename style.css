@@ -148,6 +148,9 @@ body.tv .card{padding:1.4rem 1.6rem;border-radius:1.3rem;border-width:.18rem;box
 .tvwait{text-align:center;display:grid;gap:1.1rem;justify-items:center;padding-top:.4rem}
 .hero{font-family:var(--disp);font-weight:400;font-size:clamp(2.6rem,8vh,6.5rem);line-height:1;margin:0 0 .4rem;color:#fff;text-shadow:0 .35rem 0 var(--drop)}
 .hero span{color:var(--acc)}
+/* Logo « 🍄 Champotes Quiz » (base.js) : le champignon reste avec « Champotes », un peu plus petit sur téléphone pour tenir sur deux lignes. */
+.hero .champ{font-weight:inherit;white-space:nowrap}
+.hero:has(.champ){font-size:min(clamp(2.6rem,8vh,6.5rem),12vw)}
 .qr{background:#fff;padding:1rem;border-radius:1.3rem;line-height:0;border:.2rem solid var(--edge);box-shadow:0 .45rem 0 var(--drop)}.qr img{width:min(62vw,40vh,24rem);image-rendering:pixelated}
 .tvwait>p{margin:0}
 .url{color:var(--mut);font-size:.8rem;word-break:break-all;max-width:44rem;margin:0}
