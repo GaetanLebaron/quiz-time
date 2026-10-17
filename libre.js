@@ -217,7 +217,7 @@ function fBar(s,host){
 }
 function fQR(){
   const u=qrURL(6,teamUrl());
-  return `<div class="fqrin">${u?`<img alt="QR code pour rejoindre la partie" src="${u}">`:''}<p class="sub">Les autres équipes scannent ce QR code avec leur téléphone pour rejoindre la partie.</p></div>`;
+  return `<div class="fqrin">${u?`<img alt="QR code pour rejoindre la partie" src="${u}">`:''}<p class="sub">${TV||HOSTL||scr!='cfgd'?'Les autres équipes scannent ce QR code avec leur téléphone pour rejoindre la partie.':'Les autres équipes scannent le QR code affiché sur la TV, ou celui-ci, avec leur téléphone.'}</p></div>`;
 }
 function fRulesShort(s){
   return `<ul class="frl"><li><b>Tous en même temps :</b> chaque équipe répond sur son téléphone, en ${s.tt} secondes.</li>
