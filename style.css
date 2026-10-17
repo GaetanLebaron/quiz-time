@@ -300,8 +300,17 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
    ========================================================================== */
 .fstack{display:grid;gap:20px}
 .fstack+.fqr{margin-top:20px}   /* « Inviter une équipe » sous la question (hôte) */
-.fgame .ctx{justify-content:flex-start}
 .fgame .ctx .pill.ph{margin:0}
+.fgame .ctx .theme{margin-left:auto}   /* tour à gauche, thème à droite, comme avec Maître du Jeu (y compris s'il passe à la ligne) */
+/* Révélation sur le téléphone : carte jaune « Bien joué ! » / « Dommage ! » à la taille du téléphone */
+.fgame .rcard{gap:14px;padding:14px 16px;border-width:3px;border-radius:18px;box-shadow:0 6px 0 var(--drop)}
+.fgame .rcard h3{font-size:1.7rem;margin-bottom:4px}
+.fgame .rcard p{font-size:1.05rem}
+.fgame .burst{width:4.4rem;height:4.4rem}
+.fgame .burst b{font-size:1.6rem}
+/* Réponse révélée sur le téléphone : l'étiquette passe sur deux lignes pour laisser la place à la réponse */
+.fgame .opts.one .ot{overflow-wrap:break-word;hyphens:auto}
+.fgame .opts.one .otag{white-space:normal;width:min-content;text-align:center;line-height:1.1}
 .fgame .acts input[type=text]{width:100%;font-size:1.2rem}
 .fgame .acts .opts{margin:0}
 .frl{margin:0 0 16px;padding-left:1.2rem;display:grid;gap:8px;line-height:1.35}
