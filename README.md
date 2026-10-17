@@ -7,23 +7,24 @@ Application de quiz pour un Maître du Jeu : un **écran TV** affiche les questi
 | Fichier | Rôle |
 |---|---|
 | `index.html` | Page de l'application |
-| `style.css` | Apparence |
-| `base.js` | Réglages, rôle de l'appareil (TV, télécommande, équipe, hôte sans TV) et fonctions communes |
-| `moteur.js` | Déroulement de la partie avec Maître du Jeu |
-| `liaison.js` | Échange de messages entre la TV et les téléphones (ntfy.sh, Nostr, liaison directe) |
-| `libre.js` | Partie sans Maître du Jeu : chaque équipe joue sur son téléphone |
-| `app.js` | Écrans et démarrage de l'application |
-| `questions.json` | **Toutes les questions**, thèmes et niveaux |
-| `qrcode.js` | Génération du QR code |
-| `lilita-one.woff2`, `nunito.woff2` | Polices (Lilita One et Nunito, licence SIL Open Font License) |
-| `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png` | Installation sur l'écran d'accueil (PWA) |
-| `favicon.png` | Icône de l'onglet du navigateur (fond transparent) |
+| `css/style.css` | Apparence |
+| `js/base.js` | Réglages, rôle de l'appareil (TV, télécommande, équipe, hôte sans TV) et fonctions communes |
+| `js/moteur.js` | Déroulement de la partie avec Maître du Jeu |
+| `js/liaison.js` | Échange de messages entre la TV et les téléphones (ntfy.sh, Nostr, liaison directe) |
+| `js/libre.js` | Partie sans Maître du Jeu : chaque équipe joue sur son téléphone |
+| `js/app.js` | Écrans et démarrage de l'application |
+| `js/qrcode.js` | Génération du QR code |
+| `donnees/questions.json` | **Toutes les questions**, thèmes et niveaux |
+| `polices/lilita-one.woff2`, `polices/nunito.woff2` | Polices (Lilita One et Nunito, licence SIL Open Font License) |
+| `manifest.webmanifest`, `sw.js`, `images/icon-192.png`, `images/icon-512.png` | Installation sur l'écran d'accueil (PWA) |
+| `images/favicon.png` | Icône de l'onglet du navigateur (fond transparent) |
+| `outils/` | Script d'ajout de lots de questions (`outils/ajouter-lot.py`) et lots déjà ajoutés (`outils/lots/`) |
 
-Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt GitHub.
+`index.html`, `sw.js` et `manifest.webmanifest` restent à la racine du dépôt GitHub ; les autres fichiers gardent leurs dossiers.
 
 ## Mise en ligne (GitHub Pages)
 
-1. Dans le dépôt, **Add file → Upload files**, puis glisse **les fichiers** (pas le dossier qui les contient) et valide avec **Commit changes**. Les fichiers qui existent déjà (comme `index.html`) sont remplacés.
+1. Dans le dépôt, **Add file → Upload files**, puis glisse **les fichiers et les dossiers** (`css`, `js`, `donnees`, `images`, `polices`), pas le dossier qui les contient, et valide avec **Commit changes**. Les fichiers qui existent déjà (comme `index.html`) sont remplacés.
 2. Attends le point vert dans l'onglet **Actions**, puis recharge la page de la TV en forçant l'actualisation (Cmd + Maj + R sur Mac, Ctrl + Maj + R sous Windows).
 
 ## Utilisation
@@ -57,7 +58,7 @@ Sans TV, l'hôte ouvre l'adresse du site sur son téléphone et choisit **Sans M
 
 ## Ajouter des questions
 
-Ouvre `questions.json` et ajoute des lignes dans la liste `"questions"`, sans oublier la virgule entre deux questions :
+Ouvre `donnees/questions.json` et ajoute des lignes dans la liste `"questions"`, sans oublier la virgule entre deux questions :
 
 ```json
 {"theme":0,"niveau":2,"groupe":"capitales","question":"Quelle est la capitale du Portugal ?","reponse":"Lisbonne","anecdote":"Lisbonne est l'une des plus anciennes villes d'Europe."}
@@ -78,7 +79,7 @@ Les thèmes et les noms de niveaux se modifient en haut du même fichier. Une er
 
 ## Parties enregistrées
 
-Les parties sont conservées dans le navigateur de la TV (les 10 dernières). Utilise le même navigateur, hors navigation privée. Si une question est retirée de `questions.json`, une partie enregistrée qui l'utilisait reprend avec une autre question.
+Les parties sont conservées dans le navigateur de la TV (les 10 dernières). Utilise le même navigateur, hors navigation privée. Si une question est retirée de `donnees/questions.json`, une partie enregistrée qui l'utilisait reprend avec une autre question.
 
 ## Si le téléphone reste sur « Écran TV : en recherche »
 
@@ -103,4 +104,4 @@ Des lignes de diagnostic complètent l'écran d'attente du téléphone :
 2. **Liaison directe WebRTC par le Wi-Fi** : ensuite, toutes les actions de jeu passent directement entre la TV et le téléphone, sans serveur relais. Le quota gratuit de ntfy.sh (quelques centaines de messages par jour et par connexion Internet) n'est donc plus consommé pendant la partie. Un serveur STUN public (Google) sert seulement à connaître son adresse ; aucun message de jeu n'y passe.
 3. **Secours** : si la liaison directe échoue (téléphone en 4G, Wi-Fi « invité » qui isole les appareils…) ou se coupe, tout repasse automatiquement par ntfy.sh et Nostr, et le téléphone retente une liaison directe.
 
-Les noms d'équipes, questions et scores qui passent par ntfy.sh ou Nostr sont protégés par un code aléatoire contenu dans le QR code (ils ne sont pas chiffrés : quelqu'un qui connaîtrait ce code pourrait les lire). Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy : il suffit alors de définir `window.QT_BASE='https://mon-serveur/'` avant le chargement de `base.js` dans `index.html`. De même, `window.QT_NOSTR=['wss://mon-relais']` remplace la liste des relais Nostr (`[]` les désactive).
+Les noms d'équipes, questions et scores qui passent par ntfy.sh ou Nostr sont protégés par un code aléatoire contenu dans le QR code (ils ne sont pas chiffrés : quelqu'un qui connaîtrait ce code pourrait les lire). Pour un usage plus sensible, il faudrait héberger son propre serveur ntfy : il suffit alors de définir `window.QT_BASE='https://mon-serveur/'` avant le chargement de `js/base.js` dans `index.html`. De même, `window.QT_NOSTR=['wss://mon-relais']` remplace la liste des relais Nostr (`[]` les désactive).

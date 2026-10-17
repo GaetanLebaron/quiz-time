@@ -1,8 +1,8 @@
 /* Quiz Time – feuille de style (écran TV + télécommande)
    Style « jeu télé » : fond violet à pois, cartes à contour sombre et ombre portée pleine, couleurs franches.
    Polices : Lilita One (titres, propositions) et Nunito (texte), hébergées avec l'application (licence SIL OFL). */
-@font-face{font-family:"Lilita One";src:url(lilita-one.woff2) format("woff2");font-display:swap}
-@font-face{font-family:"Nunito";src:url(nunito.woff2) format("woff2");font-weight:200 1000;font-display:swap}
+@font-face{font-family:"Lilita One";src:url(../polices/lilita-one.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Nunito";src:url(../polices/nunito.woff2) format("woff2");font-weight:200 1000;font-display:swap}
 :root{--bg:#211a57;--panel:#2e2573;--panel2:#3b3189;--edge:#140f3a;--drop:#110c33;--ink:#fff;--dark:#1a1442;--mut:#b4a9ec;--lav:#c4b5ff;
 --red:#ec3a5c;--violet:#8b5cf6;--blue:#2f7be8;--acc:#ffd23c;--green:#2fd38a;--purple:#a66bff;
 --pink:var(--red);--cyan:var(--blue);--line:var(--edge);
