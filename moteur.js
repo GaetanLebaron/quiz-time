@@ -53,7 +53,7 @@ function onCmd(m){
   if(fCmd(m)){}   /* partie sans Maître du Jeu (libre.js) */
   else if(m.t=='start')startGame(m.cfg||{});
   else if(m.t=='replay'||m.t=='pause'){saveS();S=null;scr='cfgd';lsSet(CK,null)}
-  else if(m.t=='resume'){const g=findG(m.p);if(g&&g.scr!='end'){saveS();restore(g);if(S.free&&m.pid)S.host=m.pid}}
+  else if(m.t=='resume'){const g=findG(m.p);if(g&&g.scr!='end'&&!(HOSTL&&!g.S.free)){saveS();restore(g);if(S.free&&m.pid)S.host=m.pid}}
   else if(S&&m.t=='finish'&&scr=='game'){scr='end'}
   else if(m.t=='del'){lsSet(GK,(lsGet(GK)||[]).filter(g=>g.id!=m.p))}
   /* Les règles s'affichent sur la TV avant la première question, jusqu'à ce que le Maître du Jeu lance la partie. */
@@ -83,7 +83,8 @@ function restore(g){
   armTimer(false);
 }
 const findG=id=>(lsGet(GK)||[]).find(g=>g.id==id);
-const loadS=()=>restore(findG(lsGet(CK)));
+/* Sans TV (?host), seule une partie sans Maître du Jeu peut reprendre : une partie avec Maître du Jeu laissée sur ce téléphone est ignorée. */
+const loadS=()=>{restore(findG(lsGet(CK)));if(HOSTL&&S&&!S.free){S=null;scr='cfgd';lsSet(CK,null)}};
 const gsum=()=>(lsGet(GK)||[]).filter(g=>g&&g.S&&Array.isArray(g.S.teams))   /* ignore une sauvegarde abîmée au lieu de bloquer l'envoi */
   .map(g=>({id:g.id,date:g.date,rounds:g.S.rounds,round:g.S.round,done:g.scr=='end',cr:!!g.S.lvl,free:!!g.S.free,teams:g.S.teams.map(t=>({n:t.n,s:t.s}))}));
 

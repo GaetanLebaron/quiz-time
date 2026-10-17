@@ -224,12 +224,12 @@ function fGame(s){
         +(o==null?'<p class="sub hint">Touchez une proposition, puis validez.</p>':B('green',`Valider « ${esc(o)} » · ${a.h=='m'?3:1} pt${a.h=='m'?'s':''}`,`fPick(${sel})`))
         +(a.h=='m'?B('','50/50 · 1 pt',"cmd('help','f')"):'');
     }
-    body=`<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${a.done||me.from>s.round?'':tmrHTML(s)}<h2 class="q">${esc(q.q)}</h2><div class="acts">${acts}</div></section>`;
+    body=`<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${a.done||me.from>s.round?'':tmrHTML(s)}<h2 class="q">${escQ(q.q)}</h2><div class="acts">${acts}</div></section>`;
   }
   else{
     const r=s.an[PID],ok=r&&r.pts>0,mine=me.from<=s.round;
     const ready=s.rdy.includes(PID);
-    body=`<section class="card qcard"><h2 class="q">${esc(q.q)}</h2><div class="opts one">${tile(q.a,0,'ok','Bonne réponse')}</div>
+    body=`<section class="card qcard"><h2 class="q">${escQ(q.q)}</h2><div class="opts one">${tile(q.a,0,'ok','Bonne réponse')}</div>
       ${mine?`<div class="anec"><b>${ok?'Bien joué ! +'+plural(r.pts,'point'):'Dommage ! 0 point'}</b><p>Votre réponse : ${esc(fSaid(r))}</p></div>`:''}
       ${q.f?`<div class="anec"><b>Le saviez-vous ?</b><p>${esc(q.f)}</p></div>`:''}</section>
       <section class="card"><h3>Réponses des équipes</h3>${fRes(s,false)}</section>
@@ -278,7 +278,7 @@ function tvFree(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
   const tag=`<span class="qtag" style="--c:${th.c}">${thIco(s.th)}${esc(th.n)}${s.cr?' · Niveau '+s.lv:''}</span>`;
   const fact=q.f?`<div class="fact"><span class="bulb">${ICO.bulb}</span><div><h3>Le saviez-vous ?</h3><p>${esc(q.f)}</p></div></div>`:'';
-  return `${tvTopFree(s)}<section class="qcard ${r?'mini':''}">${tag}<h2 class="q">${esc(q.q)}</h2>${tmrRing(s)}</section>`
+  return `${tvTopFree(s)}<section class="qcard ${r?'mini':''}">${tag}<h2 class="q">${escQ(q.q)}</h2>${tmrRing(s)}</section>`
     +(r?`<div class="opts one">${tile(q.a,0,'ok','Bonne réponse')}</div>${fRes(s,true)}${fact}<p class="fready">${fReady(s)}</p>`:'<p class="fhint">Répondez sur vos téléphones !</p>');
 }
 function tvRulesFree(s){

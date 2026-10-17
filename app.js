@@ -131,7 +131,7 @@ const rmTeam=i=>{if(cfg.teams.length>2){cfg.teams.splice(i,1);saveCfg();render()
 
 const fmtD=t=>new Date(t).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 function savedHTML(){
-  const row=g=>`<div class="anec" style="margin:0"><b>${fmtD(g.date)} · ${g.free?'Sans Maître du Jeu · ':''}${g.cr?'Crescendo · ':''}${g.done?'Terminée':'Tour '+(g.round+1)+' / '+g.rounds}</b><p>${[...g.teams].sort((a,b)=>b.s-a.s).map(t=>esc(t.n)+' '+t.s).join(' · ')}</p><div class="row" style="margin:8px 0 0">${g.done?'':`<button class="btn" onclick="cmd('resume',${+g.id})">Reprendre</button>`}<button class="btn x" onclick="if(confirm('Supprimer cette partie ?'))cmd('del',${+g.id})">Supprimer</button></div></div>`;
+  const row=g=>`<div class="anec" style="margin:0"><b>${fmtD(g.date)} · ${g.free?'Sans Maître du Jeu · ':''}${g.cr?'Crescendo · ':''}${g.done?'Terminée':'Tour '+(g.round+1)+' / '+g.rounds}</b><p>${[...g.teams].sort((a,b)=>b.s-a.s).map(t=>esc(t.n)+' '+t.s).join(' · ')}</p><div class="row" style="margin:8px 0 0">${g.done||HOSTL&&!g.free?'':`<button class="btn" onclick="cmd('resume',${+g.id})">Reprendre</button>`}<button class="btn x" onclick="if(confirm('Supprimer cette partie ?'))cmd('del',${+g.id})">Supprimer</button></div></div>`;
   const l=ENGINE?gsum().slice(0,6):gl;if(!l.length)return'';
   return `<section class="card"><h3>Parties enregistrées</h3><div style="display:grid;gap:10px">${l.map(row).join('')}</div></section>`;
 }
@@ -190,10 +190,13 @@ const qrURL=(n,u)=>{try{const q=qrcode(0,'M');q.addData(u||joinUrl);q.make();ret
 const lostBar=(t='Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.')=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem"><img alt="QR code" style="width:7rem;border-radius:.5rem;background:#fff;padding:.4rem" src="${qrURL(6)}"><span>${t}</span></div>`;
 /* Accueil de la TV : on choisit d'abord avec ou sans Maître du Jeu, puis le QR code s'affiche pour le téléphone qui configure. */
 let tvFm=null;
+/* Sur un téléphone, pas d'écran TV à scanner : il devient l'hôte de la partie (?host), se configure et montre le QR code aux équipes. */
+const PHONE=Math.min(screen.width,screen.height)<600;
+function tvFree(){if(PHONE){lsSet(CK,null);location.href='?host';return}tvFm=true;push();render()}
 function tvWait(){
   if(tvFm==null&&!conn)return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2><p style="font-size:1.4rem;margin:0">Comment voulez-vous jouer ?</p>
   <div class="tvpick"><button class="btn" onclick="tvFm=false;push();render()"><b>Avec Maître du Jeu</b><i>Il lit les questions et valide les réponses sur son téléphone</i></button>
-  <button class="btn" onclick="tvFm=true;push();render()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
+  <button class="btn" onclick="tvFree()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
   <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
@@ -205,6 +208,9 @@ function tvWait(){
   <p style="font-size:1.4rem;margin:0">${tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code, crée son équipe, puis montre son propre QR code aux autres équipes':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(joinUrl)}</p>
   ${conn?'':'<p class="foot sub"><a href="#" onclick="tvFm=null;render();return false">Changer de mode</a></p>'}</div>`;
 }
+/* Réinitialisation de la TV, sous le bas de l'écran (il faut défiler pour l'atteindre) : même effet que ?tv,
+   utile dans l'application installée où l'adresse ne se modifie pas. La partie reste dans les parties enregistrées. */
+const tvResetHTML=`<div class="tvreset"><button class="btn mut" onclick="if(confirm('Réinitialiser l\\'écran TV ? La partie en cours reste dans les parties enregistrées.'))location.href='?tv'">Réinitialiser l'écran TV</button><p class="sub">Revient à l'accueil. La partie en cours pourra être reprise depuis les parties enregistrées.</p></div>`;
 /* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
 function tvTop(s){
   const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
@@ -231,7 +237,7 @@ function tvRules(){
 function tvGame(s){
   const q=s.q,r=s.phase=='r',th=THEMES[s.th];
   const tag=`<span class="qtag" style="--c:${th.c}">${thIco(s.th)}${esc(th.n)}${s.cr?' · Niveau '+s.lv:''}</span>`;
-  return `${tvTop(s)}<section class="qcard ${r?'mini':''}">${tag}<h2 class="q">${esc(q.q)}</h2>${tmrRing(s)}</section>${optsHTML(s)}${r?resultRow(s):''}`;
+  return `${tvTop(s)}<section class="qcard ${r?'mini':''}">${tag}<h2 class="q">${escQ(q.q)}</h2>${tmrRing(s)}</section>${optsHTML(s)}${r?resultRow(s):''}`;
 }
 function ctlGame(s){
   if(s.phase=='rules')return `<div class="setup"><section class="card"><h3>Règles du jeu</h3><p>Les règles sont affichées sur la TV. Laissez les équipes les lire, puis lancez la première question.</p>
@@ -249,7 +255,7 @@ function ctlGame(s){
   }
   else b=`<div class="anec"><b>${s.pts?'+'+plural(s.pts,'point'):'0 point'} pour ${esc(s.teams[s.ti].n)}</b><p>Le saviez-vous ? ${esc(q.f)}</p></div>`+B('',s.last?'Voir le classement final':'Question suivante',"cmd('next')");
   const opts=(s.phase=='m'||s.phase=='f')?pickHTML(s):optsHTML(s);
-  return `<div class="grid"><main>${head(s)}<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${tmrHTML(s)}<h2 class="q">${esc(q.q)}</h2>
+  return `<div class="grid"><main>${head(s)}<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${tmrHTML(s)}<h2 class="q">${escQ(q.q)}</h2>
   <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${opts}<div class="acts">${b}</div></section><div class="ctlbar"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...s,i0:s.ti},true)}</div>`;
 }
 let lastH='',buzzKey='';
@@ -259,6 +265,7 @@ function render(){
   if(TV){
     const s=pub();
     h=scr=='game'&&s&&s.q?lostBar(s.free?'Téléphone de l\'hôte déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.':undefined)+(s.phase=='rules'?(s.free?tvRulesFree(s):tvRules()):s.free?tvFree(s):tvGame(s)):scr=='end'&&s?lostBar(s.free?'Scannez ce QR code avec le téléphone de l\'hôte puis touchez « Nouvelle partie ».':'Scannez ce QR code avec le téléphone du Maître du Jeu puis touchez « Nouvelle partie ».')+endHTML(s,false):tvWait();
+    if(scr=='game'||scr=='end')h=`<div class="tvmain">${h}</div>`+tvResetHTML;
   }
   else if(HOSTL){const s=pub();h=scr=='game'&&s&&s.q?fGame(s):scr=='end'&&s?endHTML(s,true):renderSetup()}
   else if(scr=='conn')h=`<div class="card"><h3>${TEAM?'Connexion à la partie…':'Connexion à l\'écran principal…'}</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">${TEAM?'Partie':'Écran TV'} : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?connHelp():''}${diagHTML()}<p class="foot sub"><a href="?forget">Scanner un autre QR code</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;

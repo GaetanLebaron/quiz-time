@@ -35,7 +35,7 @@ Tous les fichiers doivent rester dans le même dossier, à la racine du dépôt 
 
 Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'accueil (« Ajouter à l'écran d'accueil » dans le menu du navigateur), l'icône rouvre directement la télécommande. Pour utiliser un appareil comme écran TV à la place, ouvre `adresse-du-site/?tv`, ou touche le lien « Utiliser cet appareil comme écran TV » en bas de l'écran de configuration.
 
-À la fin d'une partie, la TV garde le classement affiché (même après un rechargement) jusqu'à ce que le Maître du Jeu touche « Nouvelle partie » sur son téléphone. Si le téléphone n'est plus connecté, la TV affiche un QR code au-dessus du classement : il suffit de le scanner puis de toucher « Nouvelle partie ». Ouvrir `adresse-du-site/?tv` sur la TV efface aussi la partie en cours et revient à l'écran d'accueil.
+À la fin d'une partie, la TV garde le classement affiché (même après un rechargement) jusqu'à ce que le Maître du Jeu touche « Nouvelle partie » sur son téléphone. Si le téléphone n'est plus connecté, la TV affiche un QR code au-dessus du classement : il suffit de le scanner puis de toucher « Nouvelle partie ». Ouvrir `adresse-du-site/?tv` sur la TV efface aussi la partie en cours et revient à l'écran d'accueil. Dans l'application installée, où l'adresse ne se modifie pas, fais défiler l'écran de la TV jusqu'en bas : le bouton **Réinitialiser l'écran TV** fait la même chose (la partie reste dans les parties enregistrées).
 
 ## Partie sans Maître du Jeu
 
@@ -49,7 +49,7 @@ Sur la TV, choisis **Sans Maître du Jeu** avant de scanner le QR code (ou, sur 
 - Une équipe peut rejoindre la partie en cours (elle joue à partir de la question suivante) ou la quitter sans bloquer les autres.
 - Au début de chaque question, les téléphones Android vibrent et les iPhone émettent un petit son.
 
-Sans TV, l'hôte peut aussi ouvrir directement `adresse-du-site/?host`. Son téléphone fait alors tourner la partie : il doit rester allumé jusqu'à la fin.
+Sans TV, l'hôte ouvre l'adresse du site sur son téléphone et choisit **Sans Maître du Jeu** : il configure la partie, puis montre son QR code aux autres équipes (il peut aussi ouvrir directement `adresse-du-site/?host`). Son téléphone fait alors tourner la partie : il doit rester allumé jusqu'à la fin.
 
 ## Modes de jeu
 

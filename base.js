@@ -7,6 +7,8 @@ const BASE=window.QT_BASE||'https://ntfy.sh/';   /* QT_BASE : autre serveur ntfy
 const OVL_MS=2000;   /* durée de l'animation de changement d'équipe */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Texte d'une question : espace insécable devant « ? », « ! », « : » et « ; » pour qu'ils ne se retrouvent jamais seuls en début de ligne. */
+const escQ=s=>esc(s).replace(/ ([?!:;])/g,'\u00a0$1');
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const plural=(n,w)=>n+' '+w+(n>1?'s':'');
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
