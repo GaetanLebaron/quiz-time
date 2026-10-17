@@ -344,7 +344,9 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
 .fr.me{border-color:var(--acc)}
 /* TV */
 /* TV : blocs compacts, pour que les réponses des équipes et « Le saviez-vous ? » tiennent ensemble sur l'écran */
-body.tv .fres{grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.7rem;margin:.9rem 0}
+body.tv .fres{grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.7rem;margin:1.2rem 0}
+/* Révélation : même espace vertical entre la question, la bonne réponse, les équipes et « Le saviez-vous ? » */
+body.tv .qcard.mini:has(~.fres){margin-bottom:1.2rem}
 body.tv .fr{padding:.45rem .8rem;border-width:.18rem;border-radius:.9rem;gap:.7rem}
 body.tv .fr .fp{width:3rem;height:3rem;font-size:1.35rem;border-radius:.7rem}
 body.tv .fr b{font-size:1rem}body.tv .fr p{font-size:1.15rem;margin-top:0}body.tv .fr small{font-size:.72rem;margin-top:.1rem}
