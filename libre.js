@@ -313,8 +313,8 @@ function tvFree(s){
 }
 function tvRulesFree(s){
   const P=(t,d,x)=>`<div class="rpt"><b>${t}</b><span><strong>${d}</strong> ${x}</span></div>`;
-  return `<div class="rules"><h2 class="hero">🎉 Quiz <span>Time</span> — Règles du jeu</h2>
-  <p class="rintro">Bienvenue dans Quiz Time ! Ce soir, pas de Maître du Jeu : chaque équipe joue sur son téléphone.</p>
+  return `<div class="rules"><h2 class="hero">${logoRegles()} — Règles du jeu</h2>
+  <p class="rintro">Bienvenue dans ${appNom()} ! Ce soir, pas de Maître du Jeu : chaque équipe joue sur son téléphone.</p>
   <div class="rgrid"><div class="rcol">
   <section class="card"><h3>Le principe</h3><p>La partie compte ${plural(s.rounds,'question')}. Toutes les équipes reçoivent la même question en même temps, sur la TV et sur leur téléphone, et ont ${s.tt} secondes pour répondre. Le thème change à chaque question, parmi :</p>
     <div class="rth">${THEMES.map((t,i)=>`<span style="--c:${t.c}">${thIco(i)}${esc(t.n)}</span>`).join('')}</div></section>

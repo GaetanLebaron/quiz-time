@@ -201,7 +201,7 @@ let tvFm=null;
 const PHONE=Math.min(screen.width,screen.height)<600&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
 function tvPickFree(){if(PHONE){lsSet(CK,null);location.href='?host';return}tvFm=true;push();render()}
 function tvWait(){
-  if(tvFm==null&&!conn)return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2><p style="font-size:1.4rem;margin:0">Comment voulez-vous jouer ?</p>
+  if(tvFm==null&&!conn)return `<div class="tvwait"><h2 class="hero">${logo()}</h2><p style="font-size:1.4rem;margin:0">Comment voulez-vous jouer ?</p>
   <div class="tvpick"><button class="btn" onclick="tvFm=false;push();render()"><b>Avec Maître du Jeu</b><i>Il lit les questions et valide les réponses sur son téléphone</i></button>
   <button class="btn" onclick="tvPickFree()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
   <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
@@ -212,7 +212,7 @@ function tvWait(){
   const who=tvFm?'de l\'hôte':'du Maître du Jeu';
   const s=conn?`<p class="st on">✓ Téléphone ${who} connecté · configuration en cours</p>`+tl+diagHTML()
     :`<p class="st sub">En attente du téléphone ${who}…</p>`+diagHTML(`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`);
-  return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
+  return `<div class="tvwait"><h2 class="hero">${logo()}</h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
   <p style="font-size:1.4rem;margin:0">${teams?'Équipes : scannez ce QR code avec votre téléphone pour rejoindre la partie':tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code avec son téléphone, puis crée son équipe':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(teams?teamUrl():joinUrl)}</p>
   ${conn?'':'<p class="foot sub"><a href="#" onclick="tvFm=null;render();return false">Changer de mode</a></p>'}</div>`;
 }
@@ -237,8 +237,8 @@ function tvTop(s){
 }
 function tvRules(){
   const P=(t,d,x)=>`<div class="rpt"><b>${t}</b><span><strong>${d}</strong> ${x}</span></div>`;
-  return `<div class="rules"><h2 class="hero">🎉 Quiz <span>Time</span> — Règles du jeu</h2>
-  <p class="rintro">Bienvenue dans Quiz Time ! Formez vos équipes, échauffez vos neurones : six thèmes de culture générale vous attendent.</p>
+  return `<div class="rules"><h2 class="hero">${logoRegles()} — Règles du jeu</h2>
+  <p class="rintro">Bienvenue dans ${appNom()} ! Formez vos équipes, échauffez vos neurones : six thèmes de culture générale vous attendent.</p>
   <div class="rgrid"><div class="rcol">
   <section class="card"><h3>Le principe</h3><p>La partie se joue en plusieurs tours. À chaque tour, chaque équipe reçoit une question, à tour de rôle. Le thème change à chaque tour, parmi :</p>
     <div class="rth">${THEMES.map((t,i)=>`<span style="--c:${t.c}">${thIco(i)}${esc(t.n)}</span>`).join('')}</div></section>

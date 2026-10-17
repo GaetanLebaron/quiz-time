@@ -11,6 +11,12 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const escQ=s=>esc(s).replace(/ ([?!:;])/g,'\u00a0$1');
 const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const plural=(n,w)=>n+' '+w+(n>1?'s':'');
+/* Logo de l'application. Du 30 octobre au 1er novembre 2026 inclus (date de l'appareil), il devient « 🍄 Champotes Quiz » ;
+   le titre habituel revient tout seul le 2 novembre. Seul le logo affiché change (pas l'icône, l'adresse ni le nom de l'appli). */
+const champ=(d=new Date())=>d.getFullYear()==2026&&(d.getMonth()==9&&d.getDate()>=30||d.getMonth()==10&&d.getDate()<=1);
+const appNom=()=>champ()?'Champotes Quiz':'Quiz Time';
+const logo=()=>champ()?'<b class="champ">🍄 Champotes</b> <span>Quiz</span>':'Quiz <span>Time</span>';
+const logoRegles=()=>champ()?logo():'🎉 '+logo();
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const rawGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
