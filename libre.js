@@ -186,7 +186,7 @@ const fReady=s=>{const p=s.teams.filter(t=>!t.gone),w=p.filter(t=>!s.rdy.include
 let qrOpen=false;
 function fBar(s,host){
   if(!host)return `<div class="ctlbar"><button class="btn mut" onclick="fLeave()">Quitter la partie</button></div>`;
-  return `<details class="card fqr" ${qrOpen?'open':''} ontoggle="qrOpen=this.open"><summary>Inviter une équipe</summary>${fQR()}</details>
+  return `${s.phase=='rules'?'':`<details class="card fqr" ${qrOpen?'open':''} ontoggle="qrOpen=this.open"><summary>Inviter une équipe</summary>${fQR()}</details>`}
   <div class="ctlbar"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div>`;
 }
 function fQR(){
@@ -207,7 +207,8 @@ function fGame(s){
   const B=(c,t,f)=>`<button class="btn ${c} big" onclick="${f}">${t}</button>`;
   let body='';
   if(s.phase=='rules')body=`<section class="card"><h3>Règles du jeu</h3>${HOSTL?fRulesShort(s):'<p>Les règles sont affichées sur la TV.</p>'}
-    ${host?B('pink','Lancer la partie',"cmd('begin')"):'<p class="sub">L\'hôte lance la partie quand tout le monde est prêt.</p>'}</section>`;
+    ${host?B('pink','Lancer la partie',"cmd('begin')"):'<p class="sub">L\'hôte lance la partie quand tout le monde est prêt.</p>'}</section>`
+    +(host?`<section class="card"><h3>Inviter les équipes</h3>${fQR()}</section>`:'');   /* le QR code reste en grand jusqu'à la première question */
   else if(s.phase=='q'){
     const k=s.round+'-'+a.h;if(k!=selKey){selKey=k;sel=null}
     if(fKey!=s.round){fKey=s.round;fTxt=''}
