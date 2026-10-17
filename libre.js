@@ -178,23 +178,6 @@ function fAutoJoin(){
   if(scr=='cfgd'&&!lb.some(l=>l.id==PID)||scr=='game'&&st&&st.free&&!inGame&&!st.teams.some(t=>t.id==PID)){fJoinAt=Date.now();act({t:'join',n:fN.trim()})}
 }
 
-/* ---------- Signal de début de question : vibration (Android) ou petit son (iPhone, dont les navigateurs ne savent pas vibrer) ---------- */
-let AC=null;
-function audio(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume()}catch(e){}return AC}
-/* Le son n'est permis qu'après un toucher de la page : on prépare le lecteur à chaque toucher, sur tous les téléphones,
-   pour que le son prenne le relais si la vibration est refusée (Android sans toucher depuis le rechargement, Firefox…). */
-if(!TV)document.addEventListener('pointerdown',audio,{passive:true});
-function buzz(){
-  if('vibrate' in navigator){try{if(navigator.vibrate([180,80,180]))return}catch(e){}}
-  const c=audio();if(!c)return;
-  try{
-    const o=c.createOscillator(),g=c.createGain(),t=c.currentTime;
-    o.type='sine';o.frequency.setValueAtTime(880,t);o.frequency.setValueAtTime(1320,t+.12);
-    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.35,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.38);
-    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.4);
-  }catch(e){}
-}
-
 /* ---------- Écrans des téléphones ---------- */
 const HELP={q:'Réponse directe',m:'4 propositions',f:'50/50'};
 /* Ce qu'une équipe a répondu, pour la révélation. */

@@ -277,7 +277,7 @@ function ctlGame(s){
   return `<div class="grid"><main>${head(s)}<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${tmrHTML(s)}<h2 class="q">${escQ(q.q)}</h2>
   <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${opts}<div class="acts">${b}</div></section><div class="ctlbar"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...s,i0:s.ti},true)}</div>`;
 }
-let hnAt=0,lastH='',buzzKey='';
+let hnAt=0,lastH='';
 function render(){
   $('#meta').textContent='';
   const a=$('#app');let h;
@@ -305,9 +305,6 @@ function render(){
   if(TV)teamOverlay();
   /* Hôte d'une partie qui tourne sur la TV : la TV reçoit le nom de son équipe pour l'afficher avec les inscrits. */
   if(!ENGINE&&!TEAM&&cfg.free&&scr=='cfgd'&&cOk&&cfg.me.trim()&&lbHn!==cfg.me.trim()&&Date.now()-hnAt>5000){hnAt=Date.now();say({t:'hn',n:cfg.me.trim()})}
-  /* Téléphone d'une partie sans Maître du Jeu : signal au début de chaque question. */
-  const ps=ENGINE?(HOSTL&&scr=='game'?pub():null):scr=='game'?st:null;
-  if(ps&&ps.free&&ps.phase=='q'){const k=ps.gid+'-'+ps.round;if(k!=buzzKey){buzzKey=k;const me=ps.teams.find(t=>t.id==PID);if(me&&!(ps.an[PID]&&ps.an[PID].done))buzz()}}
   tick();
 }
 
