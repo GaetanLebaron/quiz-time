@@ -250,7 +250,7 @@ function listen(onState,fallback){
   }
 }
 /* État envoyé par la TV. extra = réponse WebRTC : ce message passe forcément par les relais Internet (ntfy.sh et Nostr). */
-const push=(ask,extra)=>{const m={k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined,lb:lobby};if(extra)say(Object.assign(m,extra),true);else say(m)};
+const push=(ask,extra)=>{const m={k:'s',scr,s:pub(),ask:ask===true,g:scr=='cfgd'?gsum().slice(0,6):undefined,lb:lobby,fm:TV?tvFm:undefined};if(extra)say(Object.assign(m,extra),true);else say(m)};
 function tvInit(){
   joinUrl=location.href.split('#')[0].split('?')[0]+'?join='+T;
   H=m=>{
@@ -273,10 +273,12 @@ function hello(){
   if(offering)return;offering=true;lastHello=Date.now();
   rtcOffer().then(o=>say({t:'hello',o,rid:rtc.rid},true),()=>{rtc.st='impossible, relais Internet';say({t:'hello'})}).finally(()=>{offering=false});
 }
+let tvFmSeen=null;
 function ctlInit(){
   H=d=>{
     if(d.k=='s'){
       cOk=true;scr=d.scr;st=d.s;recvAt=Date.now();if(d.g)gl=d.g;lb=d.lb||[];
+      if(d.fm!=null&&d.fm!==tvFmSeen){tvFmSeen=d.fm;cfg.free=d.fm;saveCfg()}   /* mode choisi sur la TV avant le QR code */
       if(d.a&&d.rid==rtc.rid&&rtc.pc&&rtc.pc.signalingState=='have-local-offer')rtc.pc.setRemoteDescription({type:'answer',sdp:d.a}).catch(()=>{rtc.st='impossible, relais Internet'});
       if(d.ask)hello();
     }

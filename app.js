@@ -188,15 +188,22 @@ function connHelp(){
 }
 const qrURL=(n,u)=>{try{const q=qrcode(0,'M');q.addData(u||joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
 const lostBar=(t='Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.')=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem"><img alt="QR code" style="width:7rem;border-radius:.5rem;background:#fff;padding:.4rem" src="${qrURL(6)}"><span>${t}</span></div>`;
+/* Accueil de la TV : on choisit d'abord avec ou sans Maître du Jeu, puis le QR code s'affiche pour le téléphone qui configure. */
+let tvFm=null;
 function tvWait(){
+  if(tvFm==null&&!conn)return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2><p style="font-size:1.4rem;margin:0">Comment voulez-vous jouer ?</p>
+  <div class="tvpick"><button class="btn" onclick="tvFm=false;push();render()"><b>Avec Maître du Jeu</b><i>Il lit les questions et valide les réponses sur son téléphone</i></button>
+  <button class="btn" onclick="tvFm=true;push();render()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
+  <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
   const tl=lobby.length?`<p class="st">Équipes inscrites : ${lobby.map(l=>esc(l.n)).join(' · ')}</p>`:'';
-  const s=conn?'<p class="st on">✓ Téléphone de l\'hôte connecté · configuration en cours</p>'+tl+diagHTML()
-    :'<p class="st sub">En attente du Maître du Jeu…</p>'+diagHTML(`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`);
+  const who=tvFm?'de l\'hôte':'du Maître du Jeu';
+  const s=conn?`<p class="st on">✓ Téléphone ${who} connecté · configuration en cours</p>`+tl+diagHTML()
+    :`<p class="st sub">En attente du téléphone ${who}…</p>`+diagHTML(`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`);
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
-  <p style="font-size:1.4rem;margin:0">Scannez ce QR code avec le smartphone du Maître du Jeu, ou de l'hôte d'une partie sans Maître du Jeu</p>${s}<p class="url">${esc(joinUrl)}</p>
-  <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
+  <p style="font-size:1.4rem;margin:0">${tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code, crée son équipe, puis montre son propre QR code aux autres équipes':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(joinUrl)}</p>
+  ${conn?'':'<p class="foot sub"><a href="#" onclick="tvFm=null;render();return false">Changer de mode</a></p>'}</div>`;
 }
 /* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
 function tvTop(s){
