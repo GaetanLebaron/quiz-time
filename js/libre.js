@@ -284,7 +284,7 @@ function tvTopFree(s){
     const a=s.an[t.id],late=t.from>s.round;
     const on=s.phase=='q'?a&&a.done:s.phase=='r'&&s.rdy.includes(t.id);
     const tag=s.phase=='q'?(late?'Prochaine question':a&&a.done?'A répondu ✓':'En attente'):s.phase=='r'?(s.rdy.includes(t.id)?'Prêt ✓':''):'';
-    return `<div class="chip ${on?'cur':''} ${s.phase=='q'&&!on&&!late?'wait':''}">${tag?`<em>${tag}</em>`:''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`}).join('');
+    return `<div class="chip ${on?'cur':''} ${s.phase=='q'&&!on&&!late?'wait':''}" data-k="${esc(t.id)}">${tag?`<em>${tag}</em>`:''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`}).join('');
   return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span></div><div class="tvscore">${chips}</div></div>`;
 }
 function tvFree(s){
