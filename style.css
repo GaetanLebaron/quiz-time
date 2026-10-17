@@ -93,7 +93,7 @@ body.tv .opt:not(.ok):not(.bad):not(.no) .sh{border-width:.18rem}
 .diag summary{cursor:pointer;text-align:center;padding:.3rem;list-style-position:inside}
 .diag .st{margin:.5rem 0}
 .acts{display:grid;gap:14px}
-.acts:has(>.btn.green+.btn.pink){grid-template-columns:1fr 1fr}   /* « Bonne réponse directe » et « Mauvaise réponse » côte à côte */
+.acts:has(>.btn.green+.btn.pink){grid-template-columns:1fr 1fr}   /* « Bonne réponse » et « Mauvaise réponse » côte à côte */
 .acts>.btn.green:has(+.btn.pink),.acts>.btn.green+.btn.pink{font-size:1.1rem;padding:12px 10px}
 .acts>.btn.green+.btn.pink~.btn{grid-column:1/-1}
 /* Carte de la question (télécommande) : espacement régulier par row-gap */

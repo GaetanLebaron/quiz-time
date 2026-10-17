@@ -263,7 +263,7 @@ function ctlGame(s){
     <button class="btn pink big" onclick="cmd('begin')">Lancer la partie</button></section></div>`;
   const q=s.q,B=(c,t,a)=>`<button class="btn ${c} big" onclick="${a}">${t}</button>`;
   let b='';
-  if(s.phase=='q')b=B('green','Bonne réponse directe',"cmd('ans',5)")+B('pink','Mauvaise réponse',"cmd('ans',0)")+B('','Afficher les 4 propositions',"cmd('show')");
+  if(s.phase=='q')b=B('green','Bonne réponse',"cmd('ans',5)")+B('pink','Mauvaise réponse',"cmd('ans',0)")+B('','Afficher les 4 propositions',"cmd('show')");
   else if(s.phase=='m'||s.phase=='f'){
     const k=s.round+'-'+s.ti+'-'+s.phase;if(k!=selKey){selKey=k;sel=null}
     if(sel!=null&&s.hid.includes(s.opts[sel]))sel=null;
