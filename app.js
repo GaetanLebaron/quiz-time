@@ -75,11 +75,16 @@ function tile(o,i,st,tag,pick){
 const BURST=Array.from({length:24},(_,k)=>{const a=k*Math.PI/12-Math.PI/2,r=k%2?35:48;return(50+r*Math.cos(a)).toFixed(1)+','+(50+r*Math.sin(a)).toFixed(1)}).join(' ');
 
 /* ---------- Vues ---------- */
+let hostTv=false;   /* hôte sans TV : il a choisi « Avec la TV », on lui explique comment relier la TV */
 /* Choix du mode : avec ou sans Maître du Jeu, puis (sans Maître du Jeu) avec ou sans TV. Sans TV, ce téléphone devient l'hôte (?host). */
 function modeCards(){
-  if(HOSTL)return `<section class="card"><h3>Partie sans TV</h3><p style="margin:0">Pas de Maître du Jeu : chaque équipe joue sur son téléphone, et ce téléphone fait tourner la partie. Gardez-le allumé jusqu'à la fin.</p>
-    <p class="foot sub" style="text-align:left"><a href="?tv">Utiliser plutôt cet appareil comme écran TV</a></p></section>`;
   const B=(on,f,n,d)=>`<button class="btn ${on?'on':''}" onclick="${f}"><b>${n}</b><i>${d}</i></button>`;
+  /* Sans TV, on peut encore passer à une partie avec la TV : c'est elle qui fait alors tourner la partie, ce téléphone scanne son QR code. */
+  if(HOSTL)return `<section class="card"><h3>Écran TV</h3><div class="lv">${B(hostTv,'hostTv=true;render()','Avec la TV','Questions et scores sur la TV')}${B(!hostTv,'hostTv=false;render()','Sans TV','Tout se joue sur les téléphones')}</div>
+    ${hostTv?`<ol class="tvsteps"><li>Sur la TV, ouvrez l'adresse du site et choisissez <b>Sans Maître du Jeu</b>.</li><li>Scannez le QR code de la TV avec l'appareil photo de ce téléphone.</li><li>Montrez ensuite votre QR code aux autres équipes, comme d'habitude.</li></ol>
+    <p class="sub" style="margin:0">Le nom de votre équipe et vos réglages sont conservés. Les équipes déjà inscrites ici devront scanner le nouveau QR code.</p>`
+    :`<p class="sub" style="margin:12px 0 0">Ce téléphone fait tourner la partie : gardez-le allumé jusqu'à la fin.</p>`}
+    <p class="foot sub" style="text-align:left"><a href="?tv">Utiliser plutôt cet appareil comme écran TV</a></p></section>`;
   return `<section class="card"><h3>Maître du Jeu</h3><div class="lv">${B(!cfg.free,"cfg.free=false;saveCfg();render()",'Avec','Il lit et valide les réponses')}${B(cfg.free,"cfg.free=true;saveCfg();render()",'Sans','Chaque équipe joue sur son téléphone')}</div></section>
   ${cfg.free?`<section class="card"><h3>Écran TV</h3><div class="lv">${B(true,'','Avec la TV','Questions et révélations sur la TV')}${B(false,"if(confirm('Jouer sans TV ? Ce téléphone fera tourner la partie.'))location.href='?host'",'Sans TV','Tout se joue sur les téléphones')}</div></section>`:''}`;
 }
@@ -192,11 +197,11 @@ const lostBar=(t='Maître du Jeu déconnecté. Il peut rescanner ce QR code ou r
 let tvFm=null;
 /* Sur un téléphone, pas d'écran TV à scanner : il devient l'hôte de la partie (?host), se configure et montre le QR code aux équipes. */
 const PHONE=Math.min(screen.width,screen.height)<600;
-function tvFree(){if(PHONE){lsSet(CK,null);location.href='?host';return}tvFm=true;push();render()}
+function tvPickFree(){if(PHONE){lsSet(CK,null);location.href='?host';return}tvFm=true;push();render()}
 function tvWait(){
   if(tvFm==null&&!conn)return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2><p style="font-size:1.4rem;margin:0">Comment voulez-vous jouer ?</p>
   <div class="tvpick"><button class="btn" onclick="tvFm=false;push();render()"><b>Avec Maître du Jeu</b><i>Il lit les questions et valide les réponses sur son téléphone</i></button>
-  <button class="btn" onclick="tvFree()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
+  <button class="btn" onclick="tvPickFree()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
   <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';

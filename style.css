@@ -320,6 +320,7 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
 .fgame .acts input[type=text]{width:100%;font-size:1.2rem}
 .fgame .acts .opts{margin:0}
 .frl{margin:0 0 16px;padding-left:1.2rem;display:grid;gap:8px;line-height:1.35}
+.tvsteps{margin:14px 0 10px;padding-left:1.3rem;display:grid;gap:6px;line-height:1.35}
 .fme{font-family:var(--disp);font-size:2rem;color:var(--acc);margin:0 0 8px}
 .flb{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .flb li{background:var(--panel2);border:3px solid var(--edge);border-radius:12px;padding:6px 12px;font-weight:900}
