@@ -11,7 +11,7 @@ Application de quiz pour un Maître du Jeu : un **écran TV** affiche les questi
 | `js/base.js` | Réglages, rôle de l'appareil (TV, télécommande, équipe, hôte sans TV) et fonctions communes |
 | `js/moteur.js` | Déroulement de la partie avec Maître du Jeu |
 | `js/sons.js` | Sons de la TV : enregistrements du dossier `sons/`, ou sons créés dans le navigateur s'il en manque un |
-| `sons/` | Enregistrements libres de droits (MP3) : bonne et mauvaise réponse, roulement de tambour, fanfare |
+| `sons/` | Enregistrements libres de droits (MP3) : bonne et mauvaise réponse, roulement de tambour, fanfare, compte à rebours |
 | `js/liaison.js` | Échange de messages entre la TV et les téléphones (ntfy.sh, Nostr, liaison directe) |
 | `js/libre.js` | Partie sans Maître du Jeu : chaque équipe joue sur son téléphone |
 | `js/app.js` | Écrans et démarrage de l'application |
