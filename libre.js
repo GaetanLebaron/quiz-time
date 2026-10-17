@@ -181,8 +181,9 @@ function fAutoJoin(){
 /* ---------- Signal de début de question : vibration (Android) ou petit son (iPhone, dont les navigateurs ne savent pas vibrer) ---------- */
 let AC=null;
 function audio(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume()}catch(e){}return AC}
-/* Le son n'est permis qu'après un premier toucher de la page : on prépare le lecteur à ce moment-là. */
-if(!TV)document.addEventListener('pointerdown',()=>{if(!('vibrate' in navigator))audio()},{once:true});
+/* Le son n'est permis qu'après un toucher de la page : on prépare le lecteur à chaque toucher, sur tous les téléphones,
+   pour que le son prenne le relais si la vibration est refusée (Android sans toucher depuis le rechargement, Firefox…). */
+if(!TV)document.addEventListener('pointerdown',audio,{passive:true});
 function buzz(){
   if('vibrate' in navigator){try{if(navigator.vibrate([180,80,180]))return}catch(e){}}
   const c=audio();if(!c)return;
