@@ -255,9 +255,13 @@ function fGame(s){
   else{
     const r=s.an[PID],ok=r&&r.pts>0,mine=me.from<=s.round;
     const ready=s.rdy.includes(PID);
-    body=`<section class="card qcard"><h2 class="q">${escQ(q.q)}</h2><div class="opts one">${tile(q.a,0,'ok','Bonne réponse')}</div>
-      ${mine?`<div class="anec"><b>${ok?'Bien joué ! +'+plural(r.pts,'point'):'Dommage ! 0 point'}</b><p>Votre réponse : ${esc(fSaid(r))}</p></div>`:''}
-      ${q.f?`<div class="anec"><b>Le saviez-vous ?</b><p>${esc(q.f)}</p></div>`:''}</section>
+    /* Mauvaise réponse : en rouge, au-dessus de la bonne réponse en vert ; puis la carte jaune « Bien joué ! » ou « Dommage ! » comme sur la TV avec Maître du Jeu */
+    const bad=mine&&!ok&&r&&r.done?tile(fSaid(r),0,'bad','Votre réponse'):'';
+    const card=mine?`<div class="rcard ${ok?'good':'miss'}"><div class="burst"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="${BURST}"/></svg><b>${ok?'+'+r.pts:'0'}</b></div>
+      <div><h3>${ok?'Bien joué !':'Dommage !'}</h3><p>${ok?'Votre équipe empoche '+plural(r.pts,'point'):r&&r.done?'Pas de point cette fois':'Temps écoulé : pas de point cette fois'}</p></div></div>`:'';
+    body=`<section class="card qcard"><h2 class="q">${escQ(q.q)}</h2><div class="opts one">${bad}${tile(q.a,0,'ok','Bonne réponse')}</div>
+      ${card}
+      ${q.f?`<div class="fact"><span class="bulb">${ICO.bulb}</span><div><h3>Le saviez-vous ?</h3><p>${esc(q.f)}</p></div></div>`:''}</section>
       <div class="acts">${ready?`<div class="anec"><b>Prêt ✓</b><p>${fReady(s)}</p></div>`:B('pink',s.last?'Prêt · voir le classement':'Prêt',"cmd('rdy')")+`<p class="sub hint">${fReady(s)}</p>`}
       ${host?B('mut',s.last?'Voir le classement final sans attendre':'Question suivante sans attendre',"cmd('next')"):''}</div>
       <section class="card"><h3>Réponses des équipes</h3>${fRes(s,false)}</section>`;
