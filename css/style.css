@@ -257,15 +257,17 @@ body.tv .end .score .pt{font-size:2.3rem;line-height:1.1}
 
 /* Animation de changement d'équipe (écran TV) : même fond que l'application (--motif),
    opaque dès la première image pour que la question derrière ne se voie pas ; seul le fondu de sortie la révèle. */
-.ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovl 2s ease forwards;background:var(--motif)}
-.ovl-in{display:grid;gap:1.2rem;justify-items:center;animation:ovlin .6s cubic-bezier(.2,1.5,.4,1) both}
+/* L'écran d'annonce arrive en pivotant comme une carte (en même temps que le souffle), puis repart en pivotant pour dévoiler la question */
+.ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovlflip 2s forwards;background:var(--motif);backface-visibility:hidden}
+.ovl-in{display:grid;gap:1.2rem;justify-items:center}
 .ovl-in span{font-family:var(--disp);color:var(--lav);font-size:clamp(1.2rem,2.6vw,2.2rem);text-transform:uppercase;letter-spacing:.05em}
 .ovl-in b{font-family:var(--disp);font-weight:400;font-size:clamp(3rem,10vw,8rem);line-height:1;color:#fff;text-shadow:0 .4rem 0 var(--drop)}
 .ovl-in i{--c:var(--purple);font-style:normal;font-family:var(--disp);font-size:clamp(1.3rem,2.8vw,2.3rem);text-transform:uppercase;letter-spacing:.03em;
 background:var(--c);color:var(--dark);border:.2rem solid var(--edge);border-radius:.9rem;padding:.3rem 1.1rem;box-shadow:0 .3rem 0 var(--drop);transform:rotate(-2deg)}
 .ovl-in em{font-style:normal;font-family:var(--disp);font-size:clamp(1.2rem,2.6vw,2rem);text-transform:uppercase;background:var(--green);color:var(--dark);border:.2rem solid var(--edge);border-radius:.8rem;padding:.25rem 1rem}
-@keyframes ovl{0%,82%{opacity:1}100%{opacity:0}}
-@keyframes ovlin{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes ovlflip{0%{transform:perspective(1600px) rotateY(-90deg);animation-timing-function:cubic-bezier(.2,1.25,.4,1)}
+25%,78%{transform:perspective(1600px) rotateY(0);animation-timing-function:ease-in}100%{transform:perspective(1600px) rotateY(90deg)}}
+@keyframes ovl{0%,82%{opacity:1}100%{opacity:0}}   /* mouvement réduit : simple fondu */
 
 /* Règles du jeu (écran TV, avant la première question) : tout tient sur un écran */
 .rules{display:grid;gap:.75rem;font-size:1.05rem}
