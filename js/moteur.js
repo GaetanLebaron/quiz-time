@@ -37,7 +37,7 @@ function startGame(c){
   const rounds=Math.max(cr?lv.length:1,Math.min(30,+c.rounds||5)),level=cr?lv[0]:Math.max(1,Math.min(LV.length,+c.level||2));
   let tt=Math.round(+c.timer||0);tt=tt>0?Math.max(5,Math.min(300,tt)):0;
   const bag=[];while(bag.length<rounds)bag.push(...shuf(THEMES.map((_,i)=>i)));
-  S={gid:Date.now(),date:Date.now(),teams:teams.map(n=>({n,s:0})),rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),phase:'rules',opts:null,hid:[],pts:0};
+  S={gid:Date.now(),date:Date.now(),teams:teams.map(n=>({n,s:0})),rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),phase:'rules',opts:null,hid:[],pts:0,snd:c.snd!==false};
   S.q=pick(S.themes[0]);armTimer(true);scr='game';
 }
 function next(){

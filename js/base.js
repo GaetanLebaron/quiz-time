@@ -49,7 +49,7 @@ document.body.classList.toggle('tv',TV);document.documentElement.classList.toggl
 /* ---------- État ---------- */
 let THEMES=[],LV=[],Q=[],QMAP=new Map();
 /* free : partie sans Maître du Jeu ; me : nom de l'équipe de l'hôte ; roundsFree et timerFree : réglages propres à ce mode (une question par tour). */
-let cfg=Object.assign({teams:['Équipe 1','Équipe 2'],rounds:5,level:2,mode:'std',levels:[1,2,3,4,5],timerOn:false,timerSec:30,free:false,me:'',roundsFree:10,timerFree:30},lsGet('qt-cfg')||{});
+let cfg=Object.assign({teams:['Équipe 1','Équipe 2'],rounds:5,level:2,mode:'std',levels:[1,2,3,4,5],timerOn:false,timerSec:30,free:false,me:'',roundsFree:10,timerFree:30,tvSnd:true},lsGet('qt-cfg')||{});
 if(HOSTL)cfg.free=true;   /* sans TV, il n'y a pas de Maître du Jeu */
 if(!Array.isArray(cfg.levels))cfg.levels=[1,2,3,4,5];
 if(!Array.isArray(cfg.teams)||cfg.teams.length<2)cfg.teams=['Équipe 1','Équipe 2'];
