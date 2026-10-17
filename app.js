@@ -200,7 +200,7 @@ function tvWait(){
   <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
   const u=qrURL(8);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
-  const tl=lobby.length?`<p class="st">Équipes inscrites : ${lobby.map(l=>esc(l.n)).join(' · ')}</p>`:'';
+  const tl=lobbyNames().length?`<p class="st">Équipes inscrites : ${lobbyNames().map(esc).join(' · ')}</p>`:'';
   const who=tvFm?'de l\'hôte':'du Maître du Jeu';
   const s=conn?`<p class="st on">✓ Téléphone ${who} connecté · configuration en cours</p>`+tl+diagHTML()
     :`<p class="st sub">En attente du téléphone ${who}…</p>`+diagHTML(`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`);
@@ -269,7 +269,7 @@ function ctlGame(s){
   return `<div class="grid"><main>${head(s)}<section class="card qcard"><p class="lvl">Niveau ${q.l} · ${esc(LV[q.l-1])}</p>${tmrHTML(s)}<h2 class="q">${escQ(q.q)}</h2>
   <p class="exp">Réponse attendue : <b>${esc(q.a)}</b></p>${opts}<div class="acts">${b}</div></section><div class="ctlbar"><button class="btn mut" onclick="if(confirm('Mettre la partie en pause ? Elle restera enregistrée.'))cmd('pause')">Mettre en pause</button><button class="btn pink" onclick="if(confirm('Terminer la partie maintenant ?'))cmd('finish')">Terminer la partie</button></div></main>${board({...s,i0:s.ti},true)}</div>`;
 }
-let lastH='',buzzKey='';
+let hnAt=0,lastH='',buzzKey='';
 function render(){
   $('#meta').textContent='';
   const a=$('#app');let h;
@@ -295,6 +295,8 @@ function render(){
   /* Bouton de la TV sélectionné à la télécommande : il garde la sélection quand l'écran est redessiné. */
   if(tvFocus){const b=document.getElementById(tvFocus);tvFocus='';if(b)b.focus()}
   if(TV)teamOverlay();
+  /* Hôte d'une partie qui tourne sur la TV : la TV reçoit le nom de son équipe pour l'afficher avec les inscrits. */
+  if(!ENGINE&&!TEAM&&cfg.free&&scr=='cfgd'&&cOk&&cfg.me.trim()&&lbHn!==cfg.me.trim()&&Date.now()-hnAt>5000){hnAt=Date.now();say({t:'hn',n:cfg.me.trim()})}
   /* Téléphone d'une partie sans Maître du Jeu : signal au début de chaque question. */
   const ps=ENGINE?(HOSTL&&scr=='game'?pub():null):scr=='game'?st:null;
   if(ps&&ps.free&&ps.phase=='q'){const k=ps.gid+'-'+ps.round;if(k!=buzzKey){buzzKey=k;const me=ps.teams.find(t=>t.id==PID);if(me&&!(ps.an[PID]&&ps.an[PID].done))buzz()}}
