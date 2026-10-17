@@ -1,14 +1,15 @@
-"""Ajoute un lot de questions (outils/lots/*.py) à questions.json, après vérification.
+"""Ajoute un lot de questions (outils/lots/*.py) à donnees/questions.json, après vérification.
 Usage : python3 outils/ajouter-lot.py outils/lots/geo-1.py [--dry]
 Vérifie : champs, doublons (avec la banque existante et dans le lot), fausses propositions
 (au moins 3, distinctes de la réponse), groupes ayant au moins 4 réponses différentes,
 réponses numériques pour les groupes déclarés dans ANNEES.
 Met une majuscule au début des réponses et des fausses propositions (sauf MINUSCULE)."""
-import json,sys,re,unicodedata,collections,runpy
+import json,sys,re,unicodedata,collections,runpy,os
+QJ=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','donnees','questions.json')   # trouvé quel que soit le dossier courant
 lot=runpy.run_path(sys.argv[1]);dry='--dry' in sys.argv
 TH,NV,Q=lot['THEME'],lot['NIVEAU'],lot['Q']
 ANNEES=lot.get('ANNEES',set())   # groupes dont la réponse est une année (fausses propositions = années proches)
-d=json.load(open('questions.json',encoding='utf-8'))
+d=json.load(open(QJ,encoding='utf-8'))
 norm=lambda t:re.sub(r'[^a-z0-9]','',unicodedata.normalize('NFD',t.lower()).encode('ascii','ignore').decode())
 seen={norm(x['question']):x['question'] for x in d['questions']}
 err=[];new=[]
@@ -43,12 +44,12 @@ c=collections.Counter((x['theme'],x['niveau']) for x in allq)
 print(f'{len(new)} questions ajoutées · thème {TH} niveau {NV} : {c[(TH,NV)]} · total : {len(allq)}')
 if dry:sys.exit(0)
 # même mise en forme que le fichier d'origine : une question par ligne, le lot inséré après les questions du même thème et niveau
-src=open('questions.json',encoding='utf-8').read()
+src=open(QJ,encoding='utf-8').read()
 lines=src.split('\n');idx=[i for i,l in enumerate(lines) if l.startswith(' {"theme":')]
 pos=max([i for i in idx if json.loads(lines[i].rstrip(',')).get('theme')==TH],default=idx[-1])
 row=lambda x:' '+json.dumps(x,ensure_ascii=False,separators=(',',':'))
 ins=[row(x)+',' for x in new]
 if not lines[pos].endswith(','):lines[pos]+=',';ins[-1]=ins[-1][:-1]
 lines[pos+1:pos+1]=ins
-open('questions.json','w',encoding='utf-8').write('\n'.join(lines))
-json.load(open('questions.json',encoding='utf-8'))
+open(QJ,'w',encoding='utf-8').write('\n'.join(lines))
+json.load(open(QJ,encoding='utf-8'))

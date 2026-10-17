@@ -316,7 +316,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake(
 async function boot(){
   if(SCAN){$('#app').innerHTML=`<div class="card"><h3>Scanner l'écran TV</h3><p>Ce téléphone a oublié l'ancien écran. Ouvrez l'appareil photo et scannez le QR code affiché sur la TV : l'application s'ouvrira déjà connectée.</p></div>`;return}
   try{
-    const r=await fetch('questions.json',{cache:'no-cache'});
+    const r=await fetch('donnees/questions.json',{cache:'no-cache'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     THEMES=(d.themes||[]).map(t=>({n:t.nom,e:t.emoji,c:t.couleur}));
@@ -326,7 +326,7 @@ async function boot(){
     QMAP=new Map(Q.map(q=>[qk(q),q]));
     if(!Q.length||!THEMES.length||!LV.length)throw new Error('questions.json vide ou invalide');
   }catch(e){
-    $('#app').innerHTML=`<div class="card"><h3>Impossible de charger les questions</h3><p>${esc(e.message||e)}</p><p class="sub">Ouvrez l'application depuis son adresse en ligne (https://…), pas depuis un fichier local, et vérifiez que questions.json est bien présent à côté de index.html.</p></div>`;
+    $('#app').innerHTML=`<div class="card"><h3>Impossible de charger les questions</h3><p>${esc(e.message||e)}</p><p class="sub">Ouvrez l'application depuis son adresse en ligne (https://…), pas depuis un fichier local, et vérifiez que donnees/questions.json est bien présent.</p></div>`;
     return;
   }
   if(ENGINE)loadS();
