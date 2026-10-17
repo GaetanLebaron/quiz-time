@@ -1,7 +1,7 @@
 /* Service worker de Quiz Time : permet l'installation (PWA) et un démarrage rapide.
    Stratégie « réseau d'abord » : les mises à jour du site sont prises en compte tout de suite,
    et les fichiers en cache ne servent que si le réseau est indisponible. */
-const CACHE='quiz-time-v72';
+const CACHE='quiz-time-v73';
 const SHELL=['./','index.html','css/style.css','js/base.js','js/moteur.js','js/sons.js','js/liaison.js','js/libre.js','js/app.js','js/qrcode.js','donnees/questions.json','manifest.webmanifest','images/icon-192.png','images/icon-512.png','images/favicon.png','sons/bonne-reponse.mp3','sons/mauvaise-reponse.mp3','sons/roulement.mp3','sons/fanfare.mp3','sons/compte-a-rebours.mp3','sons/whoosh.mp3','polices/lilita-one.woff2','polices/nunito.woff2'];
 
 self.addEventListener('install',e=>{
