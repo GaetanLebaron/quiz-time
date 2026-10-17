@@ -49,7 +49,7 @@ Sur la TV, choisis **Sans Maître du Jeu** avant de scanner le QR code (ou, sur 
 - Une équipe peut rejoindre la partie en cours (elle joue à partir de la question suivante) ou la quitter sans bloquer les autres.
 - Au début de chaque question, les téléphones Android vibrent et les iPhone émettent un petit son.
 
-Sans TV, l'hôte ouvre l'adresse du site sur son téléphone et choisit **Sans Maître du Jeu** : il configure la partie, puis montre son QR code aux autres équipes (il peut aussi ouvrir directement `adresse-du-site/?host`). Son téléphone fait alors tourner la partie : il doit rester allumé jusqu'à la fin.
+Sans TV, l'hôte ouvre l'adresse du site sur son téléphone et choisit **Sans Maître du Jeu** : il configure la partie, puis montre son QR code aux autres équipes (il peut aussi ouvrir directement `adresse-du-site/?host`). Son téléphone fait alors tourner la partie : il doit rester allumé jusqu'à la fin. Pour ajouter une TV, touche **Avec la TV** sur son écran de configuration : il suffit alors d'ouvrir le site sur la TV, de choisir **Sans Maître du Jeu** et de scanner son QR code avec le téléphone de l'hôte (le nom de l'équipe et les réglages sont conservés ; les équipes déjà inscrites rescannent le QR code de l'hôte).
 
 ## Modes de jeu
 
