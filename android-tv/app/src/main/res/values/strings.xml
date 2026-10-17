@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quiz Time</string>
+    <!-- Adresse du site affiché sur la TV. -->
+    <string name="site_url" translatable="false">https://gaetanlebaron.github.io/quiz-time/</string>
+</resources>
