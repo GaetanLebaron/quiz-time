@@ -28,6 +28,7 @@ function same(v,a){
 
 /* ---------- Moteur (TV, ou hôte sans TV) ---------- */
 let lobby=[];   /* équipes inscrites avant le lancement, hors hôte : {id, n} */
+let hostN='';   /* nom de l'équipe de l'hôte, envoyé par son téléphone quand la partie tourne sur la TV */
 const MAXT=8;
 /* Nom d'équipe unique dans la partie : « Les As » déjà pris devient « Les As 2 ». */
 function fName(n,used){
@@ -94,6 +95,7 @@ function fJoin(id,n){
 function fCmd(m){
   const id=m.pid||'';
   if(m.t=='join'){fJoin(id,m.n);return true}
+  if(m.t=='hn'){hostN=String(m.n||'').trim().slice(0,24);return true}
   if(m.t=='start'&&m.cfg&&m.cfg.free){if(!S||scr!='game'||id==S.host)fStart(m.cfg,id);return true}
   if(!S||!S.free){if(m.t=='leave'){lobby=lobby.filter(l=>l.id!=id);return true}return false}
   const host=id==S.host,t=S.teams.find(x=>x.id==id);
@@ -132,6 +134,9 @@ function fpub(){
 function act(m){if(ENGINE){m.pid=PID;onCmd(m)}else say(m)}
 const teamUrl=()=>location.href.split('#')[0].split('?')[0]+'?team='+T;
 const myLobby=()=>ENGINE?lobby:lb;
+/* Nom de l'équipe de l'hôte, affiché en tête des équipes inscrites. */
+const hostName=()=>HOSTL||!ENGINE&&!TEAM?cfg.me.trim():TV?hostN:lbHn;
+const lobbyNames=()=>[...(hostName()?[hostName()+' (hôte)']:[]),...myLobby().map(x=>x.n)];
 let fTxt='',fN=rawGet('qt-tname')||'',fKey='',fJoinAt=0;
 function fSendTxt(){
   const v=fTxt.trim();if(!v)return;
@@ -256,13 +261,13 @@ function fTeam(){
     <section class="card"><h3>Équipes inscrites</h3>${fLobby()}</section>
     <div class="ctlbar"><button class="btn mut" onclick="rawDel('qt-joined');render()">Changer de nom</button><button class="btn mut" onclick="fLeave()">Quitter</button></div></div>`;
 }
-const fLobby=()=>{const l=myLobby();return l.length?`<ul class="flb">${l.map(x=>`<li>${esc(x.n)}</li>`).join('')}</ul>`:'<p class="sub">Aucune équipe pour l\'instant.</p>'};
+const fLobby=()=>{const l=lobbyNames();return l.length?`<ul class="flb">${l.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p class="sub">Aucune équipe pour l\'instant.</p>'};
 
 /* ---------- Configuration chez l'hôte ---------- */
 function fSetupCards(){
-  return `<section class="card"><h3>Votre équipe</h3><div class="row"><input type="text" id="me" maxlength="24" value="${esc(cfg.me)}" placeholder="Nom de votre équipe" aria-label="Nom de votre équipe" oninput="cfg.me=this.value;saveCfg()"></div>
+  return `<section class="card"><h3>Votre équipe</h3><div class="row"><input type="text" id="me" maxlength="24" value="${esc(cfg.me)}" placeholder="Nom de votre équipe" aria-label="Nom de votre équipe" oninput="cfg.me=this.value;saveCfg()" onchange="render()"></div>
     <p class="sub" style="margin:0">Vous jouez aussi : ce téléphone sert à répondre pour votre équipe.</p></section>
-  <section class="card"><h3>Équipes inscrites (${myLobby().length})</h3>${fQR()}${fLobby()}</section>`;
+  <section class="card"><h3>Équipes inscrites (${lobbyNames().length})</h3>${fQR()}${fLobby()}</section>`;
 }
 
 /* ---------- Écran TV ---------- */

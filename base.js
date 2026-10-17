@@ -49,7 +49,7 @@ if(!Array.isArray(cfg.levels))cfg.levels=[1,2,3,4,5];
 if(!Array.isArray(cfg.teams)||cfg.teams.length<2)cfg.teams=['Équipe 1','Équipe 2'];
 cfg.teams=cfg.teams.slice(0,8).map(t=>String(t).slice(0,24));
 const saveCfg=()=>lsSet('qt-cfg',cfg);
-let S=null,st=null,scr=TV?'wait':HOSTL?'cfgd':'conn',conn=false,joinUrl='',lb=[];   /* lb : équipes inscrites (vue du téléphone) */
+let S=null,st=null,scr=TV?'wait':HOSTL?'cfgd':'conn',conn=false,joinUrl='',lb=[],lbHn='';   /* lb : équipes inscrites (vue du téléphone), lbHn : équipe de l'hôte */
 let tvOk=false,pOk=false,cOk=false,gl=[],recvAt=0,lastKey=null;
 const t0=Date.now();
 const GK='quiz-time-games',CK='quiz-time-cur';
