@@ -237,9 +237,9 @@ function fGame(s){
     body=`<section class="card qcard"><h2 class="q">${escQ(q.q)}</h2><div class="opts one">${tile(q.a,0,'ok','Bonne réponse')}</div>
       ${mine?`<div class="anec"><b>${ok?'Bien joué ! +'+plural(r.pts,'point'):'Dommage ! 0 point'}</b><p>Votre réponse : ${esc(fSaid(r))}</p></div>`:''}
       ${q.f?`<div class="anec"><b>Le saviez-vous ?</b><p>${esc(q.f)}</p></div>`:''}</section>
-      <section class="card"><h3>Réponses des équipes</h3>${fRes(s,false)}</section>
       <div class="acts">${ready?`<div class="anec"><b>Prêt ✓</b><p>${fReady(s)}</p></div>`:B('pink',s.last?'Prêt · voir le classement':'Prêt',"cmd('rdy')")+`<p class="sub hint">${fReady(s)}</p>`}
-      ${host?B('mut',s.last?'Voir le classement final sans attendre':'Question suivante sans attendre',"cmd('next')"):''}</div>`;
+      ${host?B('mut',s.last?'Voir le classement final sans attendre':'Question suivante sans attendre',"cmd('next')"):''}</div>
+      <section class="card"><h3>Réponses des équipes</h3>${fRes(s,false)}</section>`;
   }
   return `<div class="grid fgame"><main>${head}<div class="fstack">${body}</div>${fBar(s,host)}</main>${board({...s,i0:s.teams.indexOf(me)},true)}</div>`;
 }
