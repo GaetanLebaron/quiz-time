@@ -8,13 +8,16 @@
 --pink:var(--red);--cyan:var(--blue);--line:var(--edge);
 --disp:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
 color-scheme:dark;
+/* --motif : fond violet à pois, unique définition utilisée par tous les écrans (téléphones, TV, animation de changement d'équipe).
+   Pois et espacement en px fixes : le motif est identique quelle que soit la taille de base du texte (html.tv). */
+--motif:radial-gradient(rgba(255,255,255,.08) 1.4px,transparent 1.8px) 0 0/30px 30px,var(--bg);
 /* --acc : unique couleur d'accent de l'interface (équipe qui joue, scores, « Bien joué ! », étoiles, bouton principal…).
    Les couleurs des thèmes (questions.json) ne sont pas réutilisées ailleurs. */
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;min-height:100vh;color:var(--ink);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-weight:700;font-size:17px;
-background:radial-gradient(rgba(255,255,255,.08) 1.4px,transparent 1.8px) 0 0/30px 30px,var(--bg)}
+background:var(--motif)}
 .wrap{max-width:1120px;margin:0 auto;padding:24px 20px 48px}
 header:has(#meta:empty){display:none}
 header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
@@ -136,7 +139,7 @@ html.tv{font-size:clamp(13px,min(2.05vw,1.95vh),52px)}
    avec un plancher à 13px, tout y était 23 % trop gros et le bas de l'écran était coupé. */
 @media(orientation:landscape){html.tv{font-size:clamp(9px,min(1.1vw,1.95vh),52px)}}
 @media(max-height:500px){html.tv{font-size:clamp(11px,min(2.2vw,2.6vh),56px)}}
-body.tv{font-size:1.2rem;background-size:1.6rem 1.6rem,auto}
+body.tv{font-size:1.2rem}
 /* Marge de sécurité d'environ 5 % sur chaque bord : beaucoup de TV rognent le pourtour de l'image (overscan). */
 body.tv .wrap{max-width:none;padding:clamp(14px,5vh,64px) clamp(16px,5.5vw,110px)}
 body.tv header{display:none}
@@ -249,9 +252,9 @@ body.tv .end .score .pt{font-size:2.3rem;line-height:1.1}
   .rrow{grid-template-columns:1fr}
 }
 
-/* Animation de changement d'équipe (écran TV) : même fond que l'application (pois de même taille, hérités de body),
+/* Animation de changement d'équipe (écran TV) : même fond que l'application (--motif),
    opaque dès la première image pour que la question derrière ne se voie pas ; seul le fondu de sortie la révèle. */
-.ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovl 2s ease forwards;background:inherit}
+.ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovl 2s ease forwards;background:var(--motif)}
 .ovl-in{display:grid;gap:1.2rem;justify-items:center;animation:ovlin .6s cubic-bezier(.2,1.5,.4,1) both}
 .ovl-in span{font-family:var(--disp);color:var(--lav);font-size:clamp(1.2rem,2.6vw,2.2rem);text-transform:uppercase;letter-spacing:.05em}
 .ovl-in b{font-family:var(--disp);font-weight:400;font-size:clamp(3rem,10vw,8rem);line-height:1;color:#fff;text-shadow:0 .4rem 0 var(--drop)}
