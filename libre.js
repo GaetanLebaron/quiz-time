@@ -25,6 +25,26 @@ function same(v,a){
   const tol=y.length<=3?0:y.length<=5?1:y.length<=10?2:3;
   return lev(x,y)<=tol;
 }
+/* Personnes (familles de questions ci-dessous) : le nom de famille seul suffit, « Hugo » pour « Victor Hugo »,
+   « de Gaulle » ou « Gaulle » pour « Charles de Gaulle ». Jamais pour un roi ou un pape numéroté (« Louis XIV »),
+   ni pour un surnom (« Charles le Chauve », « Jean sans Peur »). */
+const PERS=new Set(['personnages-histoire','ecrivains','scientifiques','sportifs','sportives','peintres','sculpteurs','architectes',
+  'compositeurs','chanteurs','chanteuses','acteurs','actrices','realisateurs','footballeurs','joueurs-tennis','joueuses-tennis',
+  'coureurs','pilotes','auteurs-bd','vrais-noms']);
+const PART=/^(?:de|du|des|d'|von|van|der|den|di|da|del|della|dos|las|los|ten|ter|zu)$/;
+function lastNames(a){
+  const w=String(a).trim().split(/\s+/);
+  if(w.length<2||/,/.test(a)||w.some(x=>/^(?:[IVXL]+|Ier|Ire|1er)$/.test(x)))return[];
+  /* « le », « la », « sans », « dit » en minuscules annoncent un surnom, sauf « la » après une particule (« de la Salle ») */
+  if(w.some((x,i)=>/^(?:le|la|les|sans|dit|l'.*)$/.test(x)&&!(i>0&&PART.test(w[i-1]))))return[];
+  const out=[];
+  for(let i=1;i<w.length;i++){
+    if(PART.test(w[i-1])&&i>1)out.push(w.slice(i-1).join(' '));   /* avec sa particule : « de Gaulle » */
+    if(!PART.test(w[i])&&!(i>1&&/^(?:Le|La|Les|De|Du|Des|Di|Da|Del|Van|Von|Ben|El|Al|Mac)$/.test(w[i-1])))out.push(w.slice(i).join(' '));   /* pas « Tour » seul pour « Georges de La Tour » */
+  }
+  return out.filter(n=>norm(n).length>=3);
+}
+const good=(v,q)=>same(v,q.a)||PERS.has(q.g)&&lastNames(q.a).some(n=>same(v,n));
 
 /* ---------- Moteur (TV, ou hôte sans TV) ---------- */
 let lobby=[];   /* équipes inscrites avant le lancement, hors hôte : {id, n} */
@@ -105,7 +125,7 @@ function fCmd(m){
     case 'help':if(fCan(t)){const a=S.ans[id]||(S.ans[id]={h:'q'});if(m.p=='m'&&a.h=='q')a.h='m';else if(m.p=='f'&&a.h=='m')a.h='f'}break;
     case 'ans':if(fCan(t)){
       const a=S.ans[id]||(S.ans[id]={h:'q'});
-      if(a.h=='q'&&typeof m.v=='string'&&m.v.trim()){a.v=m.v.trim().slice(0,60);a.pts=same(a.v,S.q.a)?5:0;a.done=true}
+      if(a.h=='q'&&typeof m.v=='string'&&m.v.trim()){a.v=m.v.trim().slice(0,60);a.pts=good(a.v,S.q)?5:0;a.done=true}
       else if(a.h!='q'&&S.opts.includes(m.c)&&!(a.h=='f'&&S.hid.includes(m.c))){a.c=m.c;a.pts=m.c==S.q.a?(a.h=='m'?3:1):0;a.done=true}
       fCheck();
     }break;
@@ -200,7 +220,7 @@ function fQR(){
 }
 function fRulesShort(s){
   return `<ul class="frl"><li><b>Tous en même temps :</b> chaque équipe répond sur son téléphone, en ${s.tt} secondes.</li>
-  <li><b>5 points</b> pour une réponse tapée sans aide (les petites fautes sont acceptées), <b>3 points</b> avec les 4 propositions, <b>1 point</b> avec le 50/50.</li>
+  <li><b>5 points</b> pour une réponse tapée sans aide (les petites fautes sont acceptées, et pour une personne le nom de famille suffit), <b>3 points</b> avec les 4 propositions, <b>1 point</b> avec le 50/50.</li>
   <li>Une réponse envoyée est définitive. Après la révélation, touchez <b>Prêt</b> pour passer à la suite.</li></ul>`;
 }
 function fGame(s){
@@ -297,7 +317,7 @@ function tvRulesFree(s){
   <section class="card"><h3>La fin de partie</h3><p>Après la dernière question, l'équipe qui a le plus de points remporte la partie 🏆. En cas d'égalité, les équipes ex æquo se partagent la victoire.</p></section>
   </div><div class="rcol">
   <section class="card"><h3>Comment répondre</h3><p>Sur votre téléphone, trois façons de tenter votre chance. Plus vous prenez de risques, plus vous gagnez de points :</p>
-    ${P('5 pts','Réponse tapée :','vous écrivez la réponse sans aide. Les petites fautes d\'orthographe sont acceptées.')}
+    ${P('5 pts','Réponse tapée :','vous écrivez la réponse sans aide. Les petites fautes d\'orthographe sont acceptées, et pour une personne, le nom de famille suffit.')}
     ${P('3 pts','Les 4 propositions :','vous demandez à voir quatre réponses possibles, et vous choisissez.')}
     ${P('1 pt','Le 50/50 :','il ne reste plus que deux propositions. À vous de trouver la bonne.')}
     <p class="rwarn">⚠️ <strong>Attention :</strong> une réponse envoyée est définitive, et une mauvaise réponse rapporte 0 point. Sans réponse à la fin du temps, c'est 0 point aussi.</p></section>
