@@ -208,6 +208,9 @@ function tvWait(){
   <p style="font-size:1.4rem;margin:0">${tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code, crée son équipe, puis montre son propre QR code aux autres équipes':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(joinUrl)}</p>
   ${conn?'':'<p class="foot sub"><a href="#" onclick="tvFm=null;render();return false">Changer de mode</a></p>'}</div>`;
 }
+/* Réinitialisation de la TV, sous le bas de l'écran (il faut défiler pour l'atteindre) : même effet que ?tv,
+   utile dans l'application installée où l'adresse ne se modifie pas. La partie reste dans les parties enregistrées. */
+const tvResetHTML=`<div class="tvreset"><button class="btn mut" onclick="if(confirm('Réinitialiser l\\'écran TV ? La partie en cours reste dans les parties enregistrées.'))location.href='?tv'">Réinitialiser l'écran TV</button><p class="sub">Revient à l'accueil. La partie en cours pourra être reprise depuis les parties enregistrées.</p></div>`;
 /* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
 function tvTop(s){
   const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
@@ -262,6 +265,7 @@ function render(){
   if(TV){
     const s=pub();
     h=scr=='game'&&s&&s.q?lostBar(s.free?'Téléphone de l\'hôte déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.':undefined)+(s.phase=='rules'?(s.free?tvRulesFree(s):tvRules()):s.free?tvFree(s):tvGame(s)):scr=='end'&&s?lostBar(s.free?'Scannez ce QR code avec le téléphone de l\'hôte puis touchez « Nouvelle partie ».':'Scannez ce QR code avec le téléphone du Maître du Jeu puis touchez « Nouvelle partie ».')+endHTML(s,false):tvWait();
+    if(scr=='game'||scr=='end')h=`<div class="tvmain">${h}</div>`+tvResetHTML;
   }
   else if(HOSTL){const s=pub();h=scr=='game'&&s&&s.q?fGame(s):scr=='end'&&s?endHTML(s,true):renderSetup()}
   else if(scr=='conn')h=`<div class="card"><h3>${TEAM?'Connexion à la partie…':'Connexion à l\'écran principal…'}</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">${TEAM?'Partie':'Écran TV'} : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?connHelp():''}${diagHTML()}<p class="foot sub"><a href="?forget">Scanner un autre QR code</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;

@@ -336,3 +336,6 @@ body.tv .fres+.fact{margin-top:0}
 .tvpick{display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;width:min(100%,56rem);margin-top:1rem}
 .tvpick button{--c:var(--acc);--t:var(--dark);flex:1;min-width:16rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.6rem 1.4rem;line-height:1.2}
 .tvpick b{font-weight:400;font-size:2rem}.tvpick i{font-style:normal;font-family:"Nunito",sans-serif;font-weight:800;font-size:1rem;opacity:.85}
+/* TV : bouton de réinitialisation placé sous le bas de l'écran */
+.tvmain{min-height:100vh}
+.tvreset{text-align:center;display:grid;justify-items:center;gap:.6rem;padding:2rem 0 1rem}.tvreset p{margin:0;font-size:.85rem}
