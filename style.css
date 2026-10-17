@@ -349,8 +349,8 @@ body.tv .fr{padding:.45rem .8rem;border-width:.18rem;border-radius:.9rem;gap:.7r
 body.tv .fr .fp{width:3rem;height:3rem;font-size:1.35rem;border-radius:.7rem}
 body.tv .fr b{font-size:1rem}body.tv .fr p{font-size:1.15rem;margin-top:0}body.tv .fr small{font-size:.72rem;margin-top:.1rem}
 body.tv .fres+.fact{margin-top:0}
-/* TV, révélation : carte « Bonne réponse » droite, sans la légère rotation */
-body.tv .opts.one:has(+.fres) .opt.ok{transform:scale(1.02)}
+/* TV, révélation : carte « Bonne réponse » droite et à la même largeur que les blocs des équipes (ni rotation, ni agrandissement, ni liseré qui dépasse) */
+body.tv .opts.one:has(+.fres) .opt.ok{transform:none;box-shadow:0 .4rem 0 var(--drop)}
 .fhint{text-align:center;font-family:var(--disp);font-size:2rem;color:var(--lav);margin:2rem 0 0;text-transform:uppercase;letter-spacing:.03em}
 .fready{text-align:center;color:var(--mut);font-weight:900;margin:1rem 0 0}
 .chip.wait{opacity:.75}
