@@ -25,7 +25,11 @@ function tick(){
   if(ring){document.getElementById('tmrv').textContent=sec;ring.style.strokeDashoffset=100-pc}
   else{document.getElementById('tmrv').textContent=ms<=0?'Temps écoulé !':sec+' s';document.getElementById('tmrb').style.width=pc+'%'}
   box.classList.toggle('low',ms>0&&sec<=5);box.classList.toggle('zero',ms<=0);
+  /* 5 dernières secondes : le chiffre bat à chaque seconde (classe retirée puis remise pour rejouer l'animation) */
+  if(ms>0&&sec<=5&&sec!=beatSec){beatSec=sec;const v=document.getElementById('tmrv');v.classList.remove('beat');void v.offsetWidth;v.classList.add('beat')}
+  else if(sec>5)beatSec=0;
 }
+let beatSec=0;
 
 /* ---------- Animation de changement d'équipe (écran TV) ---------- */
 function teamOverlay(){
@@ -48,6 +52,60 @@ function teamOverlay(){
   const d=document.createElement('div');d.className='ovl';
   d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${thIco(S.themes[S.round])}${esc(th.n)}</i></div>`;
   document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);
+}
+
+/* ---------- Animations : entrée de la question, scores qui défilent, podium final ----------
+   L'écran est redessiné à chaque changement : une animation d'entrée ne se joue que sur le premier affichage
+   de sa question (ou de la fin de partie), grâce à une clé, comme l'animation de changement d'équipe.
+   Uniquement transform et opacity, pour rester fluide sur les vieilles TV et dans l'appli Android TV. */
+const CALME=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+let aniQ='',aniO='',aniE='',scVu={},scGid=null;
+function animIn(){
+  const s=ENGINE?pub():st;if(!s)return;
+  const end=document.querySelector('.end');
+  if(end){if(aniE!==s.gid){aniE=s.gid;podium(end)}return}
+  if(!s.q||s.phase=='rules')return;
+  const key=s.gid+'-'+s.round+'-'+s.ti,qc=document.querySelector('.qcard');
+  if(qc&&key!==aniQ){
+    aniQ=key;
+    /* Sur la TV, l'animation de changement d'équipe couvre l'écran : la question arrive quand elle s'efface. */
+    if(s.phase!='r'){if(document.querySelector('.ovl'))qc.style.setProperty('--ad',OVL_MS*.8/1000+'s');qc.classList.add('in')}
+  }
+  const op=document.querySelector('.opts:not(.one)');
+  if(op&&key!==aniO){aniO=key;if(s.phase!='r')op.classList.add('in')}
+  scores(s);
+}
+/* Bandeau des équipes : le score défile de l'ancienne à la nouvelle valeur, et les points gagnés s'envolent au-dessus. */
+function scores(s){
+  const fresh=scGid!==s.gid;scGid=s.gid;
+  document.querySelectorAll('.chip[data-k]').forEach(c=>{
+    const k=c.getAttribute('data-k'),b=c.querySelector('.sc b'),v=+b.textContent,old=scVu[k];
+    scVu[k]=v;
+    if(fresh||CALME||old==null||v<=old)return;
+    const plus=document.createElement('i');plus.className='plus';plus.textContent='+'+(v-old);c.appendChild(plus);
+    c.classList.add('gain');b.textContent=old;
+    const t0=Date.now()+400,D=900;
+    (function step(){
+      const e=document.querySelector('.chip[data-k="'+k+'"] .sc b');if(!e)return;
+      const p=Math.max(0,Math.min(1,(Date.now()-t0)/D));
+      e.textContent=Math.round(old+(v-old)*(1-Math.pow(1-p,3)));
+      if(p<1)requestAnimationFrame(step);
+    })();
+  });
+}
+/* Fin de partie : le classement apparaît du dernier au premier, puis le vainqueur, le trophée et les confettis. */
+function podium(end){
+  const li=[...end.querySelectorAll('.score li')],n=li.length,G=.45;
+  li.forEach((l,k)=>l.style.animationDelay=(n-1-k)*G+'s');
+  const wd=n*G+.2;end.style.setProperty('--wd',wd+'s');end.classList.add('in');
+  if(!CALME)setTimeout(confetti,wd*1000+300);
+}
+function confetti(){
+  const d=document.createElement('div'),C=['var(--acc)','var(--green)','var(--red)','var(--purple)','var(--blue)','#fff'];d.className='confetti';
+  for(let i=0;i<28;i++){const x=document.createElement('i');
+    x.style.cssText=`left:${(i*37%100)+Math.random()*3}%;background:${C[i%C.length]};animation-delay:${(Math.random()*1.2).toFixed(2)}s;animation-duration:${(2.6+Math.random()*1.4).toFixed(2)}s`;
+    if(i%3==0)x.style.borderRadius='50%';d.appendChild(x)}
+  document.body.appendChild(d);setTimeout(()=>d.remove(),5500);
 }
 
 /* ---------- Habillage « jeu » : icônes et propositions ---------- */
@@ -232,7 +290,7 @@ if(TV)document.addEventListener('keydown',e=>{
 });
 /* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
 function tvTop(s){
-  const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
+  const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}" data-k="${i}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
   return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span></div><div class="tvscore">${chips}</div></div>`;
 }
 function tvRules(){
@@ -293,7 +351,8 @@ function render(){
   else h=scr=='end'?endHTML(st,true):(st.q?(st.free?fGame(st):ctlGame(st)):renderSetup());
   /* Même écran qu'avant : rien n'est redessiné, ce qui garde le clavier ouvert pendant la saisie d'une réponse.
      Sinon, le champ qui avait le focus le retrouve, avec son texte et la position du curseur. */
-  if(h!==lastH){
+  const neu=h!==lastH;
+  if(neu){
     const f=document.activeElement,fid=f&&f.id&&f.tagName=='INPUT'?f.id:'',sv=fid?[f.value,f.selectionStart,f.selectionEnd]:null;
     if(!tvFocus&&f&&f.id&&f.id.startsWith('tvrst'))tvFocus=f.id;
     a.innerHTML=h;lastH=h;
@@ -303,6 +362,7 @@ function render(){
   /* Bouton de la TV sélectionné à la télécommande : il garde la sélection quand l'écran est redessiné. */
   if(tvFocus){const b=document.getElementById(tvFocus);tvFocus='';if(b)b.focus()}
   if(TV)teamOverlay();
+  if(neu)animIn();
   /* Hôte d'une partie qui tourne sur la TV : la TV reçoit le nom de son équipe pour l'afficher avec les inscrits. */
   if(!ENGINE&&!TEAM&&cfg.free&&scr=='cfgd'&&cOk&&cfg.me.trim()&&lbHn!==cfg.me.trim()&&Date.now()-hnAt>5000){hnAt=Date.now();say({t:'hn',n:cfg.me.trim()})}
   tick();

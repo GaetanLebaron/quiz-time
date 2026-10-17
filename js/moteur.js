@@ -45,7 +45,7 @@ function next(){
   if(S.round>=S.rounds){scr='end';return}
   S.q=pick(S.themes[S.round]);S.opts=null;S.hid=[];S.pick=null;S.phase='q';armTimer(true);
 }
-const pub=()=>S&&(S.free?fpub():{teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,lv:curLv(),cr:!!S.lvl,th:S.themes[S.round],
+const pub=()=>S&&(S.free?fpub():{gid:S.gid,teams:S.teams,rounds:S.rounds,round:S.round,ti:S.ti,level:S.level,lv:curLv(),cr:!!S.lvl,th:S.themes[S.round],
   q:S.q?{q:S.q.q,a:S.q.a,l:S.q.l,f:S.q.f}:null,phase:S.phase,opts:S.opts,hid:S.hid,pts:S.pts,pick:S.pick,tt:S.tt||0,tl:tlNow(),
   last:S.round==S.rounds-1&&S.ti==S.teams.length-1});
 
