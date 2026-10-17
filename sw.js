@@ -1,8 +1,8 @@
-/* Service worker de Quiz Time : permet l'installation (PWA) et un démarrage rapide.
-   Stratégie « réseau d'abord » : les mises à jour du site sont prises en compte tout de suite,
-   et les fichiers en cache ne servent que si le réseau est indisponible. */
-const CACHE='quiz-time-v73';
-const SHELL=['./','index.html','css/style.css','js/base.js','js/moteur.js','js/sons.js','js/liaison.js','js/libre.js','js/app.js','js/qrcode.js','donnees/questions.json','manifest.webmanifest','images/icon-192.png','images/icon-512.png','images/favicon.png','sons/bonne-reponse.mp3','sons/mauvaise-reponse.mp3','sons/roulement.mp3','sons/fanfare.mp3','sons/compte-a-rebours.mp3','sons/whoosh.mp3','polices/lilita-one.woff2','polices/nunito.woff2'];
+/* Quiz Time service worker: enables installation (PWA) and a fast startup.
+   "Network first" strategy: site updates are picked up immediately,
+   and cached files are only used when the network is unavailable. */
+const CACHE='quiz-time-v74';
+const SHELL=['./','index.html','css/style.css','js/base.js','js/engine.js','js/sounds.js','js/transport.js','js/freeplay.js','js/app.js','js/qrcode.js','data/questions.json','manifest.webmanifest','images/icon-192.png','images/icon-512.png','images/favicon.png','sounds/correct-answer.mp3','sounds/wrong-answer.mp3','sounds/drumroll.mp3','sounds/fanfare.mp3','sounds/countdown.mp3','sounds/whoosh.mp3','fonts/lilita-one.woff2','fonts/nunito.woff2'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));
@@ -12,7 +12,7 @@ self.addEventListener('activate',e=>{
 });
 self.addEventListener('fetch',e=>{
   const r=e.request,u=new URL(r.url);
-  if(r.method!=='GET'||u.origin!==self.location.origin)return;   /* ntfy.sh et le reste ne passent pas par le cache */
+  if(r.method!=='GET'||u.origin!==self.location.origin)return;   /* ntfy.sh and everything else bypass the cache */
   e.respondWith(
     fetch(r.url,{cache:'no-cache'}).then(res=>{
       if(res.ok){const copy=res.clone();caches.open(CACHE).then(c=>c.put(r,copy))}

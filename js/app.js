@@ -12,9 +12,9 @@ function go(){
   act({t:'start',cfg:free?{...c,free:true,me:cfg.me.trim(),timer:cfg.timerFree}:{...c,teams:cfg.teams,timer:cfg.timerOn?cfg.timerSec:0}});
 }
 
-/* ---------- Timer (affichage) ---------- */
+/* ---------- Timer (display) ---------- */
 const tmrHTML=s=>s&&s.tt&&s.phase!='r'?`<div class="tmr" id="tmr"><div class="tmr-bar"><i id="tmrb"></i></div><span id="tmrv">${s.tt} s</span></div>`:'';
-/* Écran TV : compte à rebours circulaire, à droite de la question */
+/* TV screen: circular countdown, to the right of the question */
 const tmrRing=s=>s.tt&&s.phase!='r'?`<div class="ring" id="tmr"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18.5" pathLength="100"/><circle id="tmrc" cx="22" cy="22" r="18.5" pathLength="100"/></svg><b id="tmrv">${s.tt}</b></div>`:'';
 function tick(){
   const box=document.getElementById('tmr');if(!box){if(TV)sndTimerStop();return}
@@ -25,40 +25,40 @@ function tick(){
   if(ring){document.getElementById('tmrv').textContent=sec;ring.style.strokeDashoffset=100-pc}
   else{document.getElementById('tmrv').textContent=ms<=0?'Temps écoulé !':sec+' s';document.getElementById('tmrb').style.width=pc+'%'}
   box.classList.toggle('low',ms>0&&sec<=5);box.classList.toggle('zero',ms<=0);
-  /* 5 dernières secondes : le chiffre bat à chaque seconde (classe retirée puis remise pour rejouer l'animation) */
+  /* Last 5 seconds: the number beats every second (class removed then re-added to replay the animation) */
   if(ms>0&&sec<=5&&sec!=beatSec){beatSec=sec;const v=document.getElementById('tmrv');v.classList.remove('beat');void v.offsetWidth;v.classList.add('beat');snd('tick',sec)}
-  else if(ms<=0&&beatSec>0){beatSec=-1;snd('buzz')}   /* temps écoulé : buzzer, une seule fois */
+  else if(ms<=0&&beatSec>0){beatSec=-1;snd('buzz')}   /* time's up: buzzer, only once */
   else if(sec>5)beatSec=0;
 }
 let beatSec=0;
 
-/* ---------- Animation de changement d'équipe (écran TV) ---------- */
+/* ---------- Team-change animation (TV screen) ---------- */
 function teamOverlay(){
   if(!S||scr!='game')return;
-  if(S.phase=='rules')return;   /* l'animation du premier tour attend la fin des règles */
+  if(S.phase=='rules')return;   /* the first round's animation waits for the rules to end */
   const key=S.gid+'-'+S.round+'-'+S.ti;
   if(key===lastKey)return;
   lastKey=key;
   if(S.phase!='q')return;
   const th=THEMES[S.themes[S.round]];
-  /* Sans Maître du Jeu : toutes les équipes jouent ensemble, l'animation annonce la question. */
+  /* Without a Game Master: all teams play together, the animation announces the question. */
   if(S.free){
     const L=curLv(),up=S.lvl&&(S.round==0||S.lvl[S.round-1]!=L);
     const d=document.createElement('div');d.className='ovl';
     d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Question ${S.round+1} / ${S.rounds}</span><b>À vos téléphones !</b><i style="--c:${th.c}">${thIco(S.themes[S.round])}${esc(th.n)}</i></div>`;
     document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);snd('whoosh');return;
   }
-  /* Crescendo : au début de la partie et à chaque passage au niveau supérieur, l'animation annonce le niveau. */
+  /* Crescendo: at the start of the game and at each step up a level, the animation announces the level. */
   const L=curLv(),up=S.lvl&&S.ti==0&&(S.round==0||S.lvl[S.round-1]!=L);
   const d=document.createElement('div');d.className='ovl';
   d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${thIco(S.themes[S.round])}${esc(th.n)}</i></div>`;
   document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);snd('whoosh');
 }
 
-/* ---------- Animations : entrée de la question, scores qui défilent, podium final ----------
-   L'écran est redessiné à chaque changement : une animation d'entrée ne se joue que sur le premier affichage
-   de sa question (ou de la fin de partie), grâce à une clé, comme l'animation de changement d'équipe.
-   Uniquement transform et opacity, pour rester fluide sur les vieilles TV et dans l'appli Android TV. */
+/* ---------- Animations: question entrance, rolling scores, final podium ----------
+   The screen is redrawn on every change: an entrance animation only plays on the first display
+   of its question (or of the end of the game), thanks to a key, like the team-change animation.
+   Only transform and opacity, to stay smooth on old TVs and in the Android TV app. */
 const CALME=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 let aniQ='',aniO='',aniE='',aniR='',scVu={},scGid=null;
 function animIn(){
@@ -69,16 +69,16 @@ function animIn(){
   const key=s.gid+'-'+s.round+'-'+s.ti,qc=document.querySelector('.qcard');
   if(qc&&key!==aniQ){
     aniQ=key;
-    /* Sur la TV, l'animation de changement d'équipe couvre l'écran : la question arrive quand elle s'efface. */
+    /* On the TV, the team-change animation covers the screen: the question arrives as it fades out. */
     if(s.phase!='r'){if(document.querySelector('.ovl'))qc.style.setProperty('--ad',OVL_MS*.8/1000+'s');qc.classList.add('in')}
   }
   const op=document.querySelector('.opts:not(.one)');
   if(op&&key!==aniO){aniO=key;if(s.phase!='r'){op.classList.add('in');snd('cascade',op.children.length)}}
-  /* Révélation : carillon si l'équipe (ou au moins une équipe, sans Maître du Jeu) marque, « pouet » sinon */
+  /* Reveal: chime if the team (or at least one team, without a Game Master) scores, "wah wah" otherwise */
   if(s.phase=='r'&&key!==aniR){aniR=key;snd(s.free?Object.values(s.an).some(a=>a.pts>0)?'good':'bad':s.pts>0?'good':'bad')}
   scores(s);
 }
-/* Bandeau des équipes : le score défile de l'ancienne à la nouvelle valeur, et les points gagnés s'envolent au-dessus. */
+/* Team banner: the score rolls from the old to the new value, and the points won fly up above it. */
 function scores(s){
   const fresh=scGid!==s.gid;scGid=s.gid;
   document.querySelectorAll('.chip[data-k]').forEach(c=>{
@@ -96,7 +96,7 @@ function scores(s){
     })();
   });
 }
-/* Fin de partie : le classement apparaît du dernier au premier, puis le vainqueur, le trophée et les confettis. */
+/* End of game: the ranking appears from last to first, then the winner, the trophy and the confetti. */
 function podium(end){
   const li=[...end.querySelectorAll('.score li')],n=li.length,G=.45;
   li.forEach((l,k)=>l.style.animationDelay=(n-1-k)*G+'s');
@@ -112,12 +112,12 @@ function confetti(){
   document.body.appendChild(d);setTimeout(()=>d.remove(),5500);
 }
 
-/* ---------- Habillage « jeu » : icônes et propositions ---------- */
+/* ---------- "Game show" look: icons and options ---------- */
 const SV=d=>`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const ICO={ok:SV('<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>'),no:SV('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
   bulb:SV('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>')};
-/* Icônes des thèmes, dans le même style au trait que l'ampoule. Dans l'ordre des thèmes de questions.json :
-   Géographie, Divertissements, Histoire, Arts et Littérature, Sciences et Nature, Sports et Loisirs. Un thème ajouté sans icône garde son émoji. */
+/* Theme icons, in the same line style as the light bulb. In the order of the themes in questions.json:
+   Geography, Entertainment, History, Arts and Literature, Science and Nature, Sports and Leisure. A theme added without an icon keeps its emoji. */
 const TICO=[
   '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/>',
   '<path d="M4 11v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8zM4 11l-.8-3.2a2 2 0 0 1 1.4-2.4l11.6-3.1a2 2 0 0 1 2.4 1.4l.8 3.3zM7.2 4.8l3 3.7M12.6 3.4l3 3.7"/>',
@@ -127,21 +127,21 @@ const TICO=[
   '<path d="M8 21h8M12 16.5V21M7 4h10v5a5 5 0 0 1-10 0zM7 6H4.5a3 3 0 0 0 2.8 4M17 6h2.5a3 3 0 0 1-2.8 4"/>'];
 const thIco=i=>TICO[i]?`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TICO[i]}</svg>`:esc(THEMES[i]?THEMES[i].e:'');
 
-/* Une proposition : sa lettre dans le carré de gauche. st = '' (en jeu), 'ok' (bonne réponse révélée, ✓),
-   'bad' (réponse fausse donnée, ✕), 'no' (autre proposition révélée), 'off' (retirée par le 50/50). Les couleurs vert et rouge sont réservées à ok et bad. */
+/* One option: its letter in the left square. st = '' (in play), 'ok' (correct answer revealed, ✓),
+   'bad' (wrong answer given, ✕), 'no' (other option revealed), 'off' (removed by the 50/50). Green and red are reserved for ok and bad. */
 function tile(o,i,st,tag,pick){
   const inner=`<span class="sh">${st=='ok'?ICO.ok:st=='bad'?ICO.no:'ABCD'[i]||''}</span><span class="ot">${esc(o)}</span>${tag?`<span class="otag">${tag}</span>`:''}`;
   return pick?`<button class="opt pk c${i} ${st} ${sel==i?'sel':''}" ${st=='off'?'disabled':''} onclick="sel=${i};render()">${inner}</button>`:`<div class="opt c${i} ${st}">${inner}</div>`;
 }
-/* Étoile à pointes du résultat (« +3 ») */
+/* Pointed star for the result ("+3") */
 const BURST=Array.from({length:24},(_,k)=>{const a=k*Math.PI/12-Math.PI/2,r=k%2?35:48;return(50+r*Math.cos(a)).toFixed(1)+','+(50+r*Math.sin(a)).toFixed(1)}).join(' ');
 
-/* ---------- Vues ---------- */
-let hostTv=false;   /* hôte sans TV : il a choisi « Avec la TV », on lui explique comment relier la TV */
-/* Choix du mode : avec ou sans Maître du Jeu, puis (sans Maître du Jeu) avec ou sans TV. Sans TV, ce téléphone devient l'hôte (?host). */
+/* ---------- Views ---------- */
+let hostTv=false;   /* host without a TV: they chose "Avec la TV", so we explain how to connect the TV */
+/* Mode choice: with or without a Game Master, then (without a Game Master) with or without a TV. Without a TV, this phone becomes the host (?host). */
 function modeCards(){
   const B=(on,f,n,d)=>`<button class="btn ${on?'on':''}" onclick="${f}"><b>${n}</b><i>${d}</i></button>`;
-  /* Sans TV, on peut encore passer à une partie avec la TV : c'est elle qui fait alors tourner la partie, ce téléphone scanne son QR code. */
+  /* Without a TV, you can still switch to a game with the TV: the TV then runs the game, and this phone scans its QR code. */
   if(HOSTL)return `<section class="card"><h3>Écran TV</h3><div class="lv">${B(hostTv,'hostTv=true;render()','Avec la TV','Questions et scores sur la TV')}${B(!hostTv,'hostTv=false;render()','Sans TV','Tout se joue sur les téléphones')}</div>
     ${hostTv?`<ol class="tvsteps"><li>Sur la TV, ouvrez l'adresse du site et choisissez <b>Sans Maître du Jeu</b>.</li><li>Scannez le QR code de la TV avec l'appareil photo de ce téléphone.</li><li>Montrez ensuite votre QR code aux autres équipes, comme d'habitude.</li></ol>
     <p class="sub" style="margin:0">Le nom de votre équipe et vos réglages sont conservés. Les équipes déjà inscrites ici devront scanner le nouveau QR code.</p>`
@@ -179,7 +179,7 @@ function renderSetup(){
   <button class="btn pink big" onclick="go()">Lancer la partie</button>${savedHTML()}
   <p class="foot sub"><span id="lnk">${esc(lnkTxt())}</span>${HOSTL?'':'<br><a href="?tv">Utiliser cet appareil comme écran TV</a>'}</p></div>`;
 }
-/* Mode Crescendo : choix des niveaux (au moins deux) et aperçu de la répartition des tours. */
+/* Crescendo mode: choice of levels (at least two) and preview of how rounds are spread. */
 function crescHTML(){
   return `<section class="card"><h3>Niveaux du Crescendo</h3>
     <p class="sub" style="margin:0 0 12px">Choisissez au moins deux niveaux : la partie commence par le plus facile et finit par le plus difficile.</p>
@@ -210,12 +210,12 @@ function board(s,cur){
   return `<aside class="card score"><h3>Classement</h3><ol>${r.map((t,k)=>`<li class="${cur&&t.i==s.i0?'cur':''}"><span class="rk">${k+1}</span><span class="nm">${esc(t.n)}</span><span class="pt">${t.s}</span></li>`).join('')}</ol></aside>`;
 }
 function head(s){
-  const th=THEMES[s.th];   /* même pastille « TOUR x/y » que sur la TV, sans étoiles : elle tient quelle que soit la durée de la partie */
+  const th=THEMES[s.th];   /* same "TOUR x/y" pill as on the TV, without stars: it fits whatever the length of the game */
   return `<div class="pill ph">Tour ${s.round+1}<span>/${s.rounds}</span></div>
   <div class="ctx"><div class="who"><span>Au tour de</span>${esc(s.teams[s.ti].n)}</div><div class="theme" style="--c:${th.c}">${thIco(s.th)}${esc(th.n)}</div></div>`;
 }
-/* Propositions. Une fois la réponse donnée (phase r) : la bonne en vert, la réponse fausse choisie en rouge, les autres en retrait.
-   Réponse directe (sans propositions) : la bonne réponse s'affiche seule. */
+/* Options. Once the answer is given (phase r): the correct one in green, the wrong one picked in red, the others dimmed.
+   Direct answer (without options): the correct answer is shown alone. */
 function optsHTML(s){
   const r=s.phase=='r';
   if(!s.opts)return r?`<div class="opts one">${tile(s.q.a,0,'ok','Bonne réponse')}</div>`:'';
@@ -223,13 +223,13 @@ function optsHTML(s){
     const st=r?(o==s.q.a?'ok':o==s.pick?'bad':s.hid.includes(o)?'off':'no'):s.hid.includes(o)?'off':'';
     return tile(o,i,st,st=='ok'?'Bonne réponse':st=='bad'?'Réponse donnée':'')}).join('')}</div>`;
 }
-/* Télécommande : le Maître du Jeu touche la proposition donnée par l'équipe, puis valide. */
+/* Remote: the Game Master taps the option given by the team, then confirms. */
 let sel=null,selKey='';
 function pickHTML(s){
   return `<div class="opts" style="--th:${THEMES[s.th].c}">${s.opts.map((o,i)=>tile(o==s.q.a?o+' ✓':o,i,s.hid.includes(o)?'off':'','',true)).join('')}</div>`;
 }
-const answer=c=>{sel=null;say({t:'ans',c})};   /* c (choix), pas o : o est réservé à l'offre WebRTC */
-/* Écran TV, réponse révélée : points marqués et « Le saviez-vous ? » sur la même ligne */
+const answer=c=>{sel=null;say({t:'ans',c})};   /* c (choice), not o: o is reserved for the WebRTC offer */
+/* TV screen, answer revealed: points scored and "Le saviez-vous ?" on the same line */
 function resultRow(s){
   const ok=s.pts>0;
   const card=`<div class="rcard ${ok?'good':'miss'}"><div class="burst"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="${BURST}"/></svg><b>${ok?'+'+s.pts:'0'}</b></div>
@@ -243,8 +243,8 @@ function endHTML(s,ctl){
   <div style="text-align:left;margin-bottom:20px">${board({...s,i0:-1},false)}</div>${ctl&&(!s.free||s.host==PID)?'<button class="btn pink big" onclick="cmd(\'replay\')">Nouvelle partie</button>':''}</div>`;
 }
 const netHTML=()=>`<p class="st sub" style="font-size:.85rem">${esc(lnkTxt())}</p><p class="st sub" style="font-size:.85rem">Code de l'écran : ${esc(codeTag())} · Envoi : ${net.fail?'⚠ '+esc((net.fail=='429'?'service saturé (429)':net.fail)+(net.why?' « '+net.why+' »':'')+(outQ.length?', nouvel essai en cours':'')):(net.ok?'OK':'en attente')} · Messages reçus : ${net.got}</p><p class="st sub" style="font-size:.85rem">Relais : ntfy.sh ${esc(net.ntfy||'…')} · Nostr ${nLive()}/${nr.length} connecté(s)</p>`+(net.sse||net.poll?`<p class="st sub" style="font-size:.85rem">Réception en temps réel : ${esc(net.sse||'…')}${net.poll?` · Lecture de secours : ${esc(net.poll)}${net.polled!=null?' ('+net.polled+' message(s) de la TV)':''}`:''}</p>`:'');
-/* Diagnostic replié par défaut (accordéon) pour ne pas encombrer l'écran ; ⚠ dans le titre en cas de problème d'envoi.
-   L'état ouvert/fermé est conservé d'un affichage à l'autre. */
+/* Diagnostics collapsed by default (accordion) to keep the screen uncluttered; ⚠ in the title when sending has a problem.
+   The open/closed state is kept from one render to the next. */
 let diagOpen=false;
 const diagHTML=extra=>`<details class="diag" ${diagOpen?'open':''} ontoggle="diagOpen=this.open"><summary>Détails de connexion${net.fail?' ⚠':''}</summary>${extra||''}${netHTML()}</details>`;
 function connHelp(){
@@ -258,11 +258,11 @@ function connHelp(){
 }
 const qrURL=(n,u)=>{try{const q=qrcode(0,'M');q.addData(u||joinUrl);q.make();return q.createDataURL(n,2)}catch(e){return''}};
 const lostBar=(t='Maître du Jeu déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.')=>conn?'':`<div class="anec" style="display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem"><img alt="QR code" style="width:7rem;border-radius:.5rem;background:#fff;padding:.4rem" src="${qrURL(6)}"><span>${t}</span></div>`;
-/* Accueil de la TV : on choisit d'abord avec ou sans Maître du Jeu, puis le QR code s'affiche pour le téléphone qui configure. */
+/* TV home screen: first choose with or without a Game Master, then the QR code is shown for the phone doing the setup. */
 let tvFm=null;
-/* Sur un téléphone, pas d'écran TV à scanner : il devient l'hôte de la partie (?host), se configure et montre le QR code aux équipes.
-   Un petit écran ne suffit pas : l'appli Android TV annonce aussi 960 × 540. Un téléphone se reconnaît à son écran tactile (pointeur « grossier »),
-   que n'a pas une TV pilotée à la télécommande. */
+/* On a phone, there is no TV screen to scan: it becomes the game's host (?host), sets itself up and shows the QR code to the teams.
+   A small screen is not enough: the Android TV app also reports 960 × 540. A phone is recognised by its touch screen ("coarse" pointer),
+   which a TV driven by a remote does not have. */
 const PHONE=Math.min(screen.width,screen.height)<600&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches);
 function tvPickFree(){if(PHONE){lsSet(CK,null);location.href='?host';return}tvFm=true;push();render()}
 function tvWait(){
@@ -270,7 +270,7 @@ function tvWait(){
   <div class="tvpick"><button class="btn" onclick="tvFm=false;push();render()"><b>Avec Maître du Jeu</b><i>Il lit les questions et valide les réponses sur son téléphone</i></button>
   <button class="btn" onclick="tvPickFree()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
   <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
-  /* Sans Maître du Jeu, une fois l'hôte connecté : la TV affiche le QR code des équipes, qui la scannent directement. */
+  /* Without a Game Master, once the host is connected: the TV shows the teams' QR code, which they scan directly. */
   const teams=tvFm&&conn,u=qrURL(8,teams?teamUrl():joinUrl);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
   const tl=lobbyNames().length?`<p class="st">Équipes inscrites : ${lobbyNames().map(esc).join(' · ')}</p>`:'';
@@ -281,21 +281,21 @@ function tvWait(){
   <p style="font-size:1.4rem;margin:0">${teams?'Équipes : scannez ce QR code avec votre téléphone pour rejoindre la partie':tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code avec son téléphone, puis crée son équipe':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(teams?teamUrl():joinUrl)}</p>
   ${conn?'':'<p class="foot sub"><a href="#" onclick="tvFm=null;render();return false">Changer de mode</a></p>'}</div>`;
 }
-/* Réinitialisation de la TV, sous le bas de l'écran (il faut défiler pour l'atteindre) : même effet que ?tv,
-   utile dans l'application installée où l'adresse ne se modifie pas. La partie reste dans les parties enregistrées. */
+/* TV reset, below the bottom of the screen (you have to scroll to reach it): same effect as ?tv,
+   useful in the installed app where the URL cannot be edited. The game stays in the saved games. */
 let tvRst=false,tvFocus='';
-/* Pas de confirm() : dans l'APK (WebView Android), il répond « non » sans rien afficher. On confirme sur la page. */
+/* No confirm(): in the APK (Android WebView), it answers "no" without showing anything. We confirm on the page instead. */
 const tvResetHTML=()=>`<div class="tvreset">${tvRst?`<p class="tvrq">Réinitialiser l'écran TV ? La partie en cours reste dans les parties enregistrées.</p>
   <div class="tvrb"><button class="btn pink" id="tvrst-ok" onclick="location.href='?tv'">Oui, réinitialiser</button><button class="btn mut" id="tvrst-no" onclick="tvRst=false;tvFocus='tvrst';render()">Annuler</button></div>`
   :`<button class="btn mut" id="tvrst" onclick="tvRst=true;tvFocus='tvrst-ok';render()">Réinitialiser l'écran TV</button><p class="sub">Revient à l'accueil. La partie en cours pourra être reprise depuis les parties enregistrées.</p>`}</div>`;
-/* Télécommande de la TV : la flèche du bas, en bas de page, sélectionne le bouton ; le bouton central (OK) l'active. */
+/* TV remote: the down arrow, at the bottom of the page, selects the button; the centre button (OK) activates it. */
 if(TV)document.addEventListener('keydown',e=>{
   const f=document.activeElement,k=e.key,ok=k=='Enter'||k=='Select'||e.keyCode==23||e.keyCode==66;
   if(ok&&f&&f.tagName=='BUTTON'){e.preventDefault();f.click();return}
   if(k=='ArrowDown'&&(!f||f==document.body)&&innerHeight+scrollY>=document.documentElement.scrollHeight-4){
     const b=document.querySelector('.tvreset button');if(b){e.preventDefault();b.focus()}}
 });
-/* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
+/* Top banner: current round and teams, with the one playing highlighted. */
 function tvTop(s){
   const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}" data-k="${i}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
   return `<div class="tvhead"><div class="pill">Tour ${s.round+1}<span>/${s.rounds}</span></div><div class="tvscore">${chips}</div></div>`;
@@ -356,8 +356,8 @@ function render(){
   else if(TEAM){fAutoJoin();h=fTeam()}
   else if(scr=='cfgd'||!st)h=renderSetup();
   else h=scr=='end'?endHTML(st,true):(st.q?(st.free?fGame(st):ctlGame(st)):renderSetup());
-  /* Même écran qu'avant : rien n'est redessiné, ce qui garde le clavier ouvert pendant la saisie d'une réponse.
-     Sinon, le champ qui avait le focus le retrouve, avec son texte et la position du curseur. */
+  /* Same screen as before: nothing is redrawn, which keeps the keyboard open while typing an answer.
+     Otherwise, the field that had focus gets it back, with its text and cursor position. */
   const neu=h!==lastH;
   if(neu){
     const f=document.activeElement,fid=f&&f.id&&f.tagName=='INPUT'?f.id:'',sv=fid?[f.value,f.selectionStart,f.selectionEnd]:null;
@@ -366,24 +366,24 @@ function render(){
     const e=fid&&document.getElementById(fid);
     if(e){e.value=sv[0];e.focus();try{e.setSelectionRange(sv[1],sv[2])}catch(x){}}
   }
-  /* Bouton de la TV sélectionné à la télécommande : il garde la sélection quand l'écran est redessiné. */
+  /* TV button selected with the remote: it keeps the selection when the screen is redrawn. */
   if(tvFocus){const b=document.getElementById(tvFocus);tvFocus='';if(b)b.focus()}
   if(TV)teamOverlay();
   if(neu)animIn();
-  /* Hôte d'une partie qui tourne sur la TV : la TV reçoit le nom de son équipe pour l'afficher avec les inscrits. */
+  /* Host of a game running on the TV: the TV receives the name of its team to show it with the registered teams. */
   if(!ENGINE&&!TEAM&&cfg.free&&scr=='cfgd'&&cOk&&cfg.me.trim()&&lbHn!==cfg.me.trim()&&Date.now()-hnAt>5000){hnAt=Date.now();say({t:'hn',n:cfg.me.trim()})}
   tick();
 }
 
-/* ---------- Écran toujours allumé (si le navigateur le permet) ---------- */
+/* ---------- Keep the screen on (if the browser allows it) ---------- */
 async function keepAwake(){try{if('wakeLock' in navigator&&!document.hidden)await navigator.wakeLock.request('screen')}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake()});
 
-/* ---------- Démarrage : chargement des questions ---------- */
+/* ---------- Startup: loading the questions ---------- */
 async function boot(){
   if(SCAN){$('#app').innerHTML=`<div class="card"><h3>Scanner l'écran TV</h3><p>Ce téléphone a oublié l'ancien écran. Ouvrez l'appareil photo et scannez le QR code affiché sur la TV : l'application s'ouvrira déjà connectée.</p></div>`;return}
   try{
-    const r=await fetch('donnees/questions.json',{cache:'no-cache'});
+    const r=await fetch('data/questions.json',{cache:'no-cache'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     THEMES=(d.themes||[]).map(t=>({n:t.nom,e:t.emoji,c:t.couleur}));
@@ -393,7 +393,7 @@ async function boot(){
     QMAP=new Map(Q.map(q=>[qk(q),q]));
     if(!Q.length||!THEMES.length||!LV.length)throw new Error('questions.json vide ou invalide');
   }catch(e){
-    $('#app').innerHTML=`<div class="card"><h3>Impossible de charger les questions</h3><p>${esc(e.message||e)}</p><p class="sub">Ouvrez l'application depuis son adresse en ligne (https://…), pas depuis un fichier local, et vérifiez que donnees/questions.json est bien présent.</p></div>`;
+    $('#app').innerHTML=`<div class="card"><h3>Impossible de charger les questions</h3><p>${esc(e.message||e)}</p><p class="sub">Ouvrez l'application depuis son adresse en ligne (https://…), pas depuis un fichier local, et vérifiez que data/questions.json est bien présent.</p></div>`;
     return;
   }
   if(ENGINE)loadS();
