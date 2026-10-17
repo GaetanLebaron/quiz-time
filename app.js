@@ -210,7 +210,18 @@ function tvWait(){
 }
 /* Réinitialisation de la TV, sous le bas de l'écran (il faut défiler pour l'atteindre) : même effet que ?tv,
    utile dans l'application installée où l'adresse ne se modifie pas. La partie reste dans les parties enregistrées. */
-const tvResetHTML=`<div class="tvreset"><button class="btn mut" onclick="if(confirm('Réinitialiser l\\'écran TV ? La partie en cours reste dans les parties enregistrées.'))location.href='?tv'">Réinitialiser l'écran TV</button><p class="sub">Revient à l'accueil. La partie en cours pourra être reprise depuis les parties enregistrées.</p></div>`;
+let tvRst=false,tvFocus='';
+/* Pas de confirm() : dans l'APK (WebView Android), il répond « non » sans rien afficher. On confirme sur la page. */
+const tvResetHTML=()=>`<div class="tvreset">${tvRst?`<p class="tvrq">Réinitialiser l'écran TV ? La partie en cours reste dans les parties enregistrées.</p>
+  <div class="tvrb"><button class="btn pink" id="tvrst-ok" onclick="location.href='?tv'">Oui, réinitialiser</button><button class="btn mut" id="tvrst-no" onclick="tvRst=false;tvFocus='tvrst';render()">Annuler</button></div>`
+  :`<button class="btn mut" id="tvrst" onclick="tvRst=true;tvFocus='tvrst-ok';render()">Réinitialiser l'écran TV</button><p class="sub">Revient à l'accueil. La partie en cours pourra être reprise depuis les parties enregistrées.</p>`}</div>`;
+/* Télécommande de la TV : la flèche du bas, en bas de page, sélectionne le bouton ; le bouton central (OK) l'active. */
+if(TV)document.addEventListener('keydown',e=>{
+  const f=document.activeElement,k=e.key,ok=k=='Enter'||k=='Select'||e.keyCode==23||e.keyCode==66;
+  if(ok&&f&&f.tagName=='BUTTON'){e.preventDefault();f.click();return}
+  if(k=='ArrowDown'&&(!f||f==document.body)&&innerHeight+scrollY>=document.documentElement.scrollHeight-4){
+    const b=document.querySelector('.tvreset button');if(b){e.preventDefault();b.focus()}}
+});
 /* Bandeau du haut : tour en cours et équipes, celle qui joue mise en avant. */
 function tvTop(s){
   const chips=s.teams.map((t,i)=>`<div class="chip ${i==s.ti?'cur':''}">${i==s.ti?'<em>À vous !</em>':''}<span class="sc"><b>${t.s}</b><small>${t.s>1?'pts':'pt'}</small></span><span class="nm">${esc(t.n)}</span></div>`).join('');
@@ -265,7 +276,7 @@ function render(){
   if(TV){
     const s=pub();
     h=scr=='game'&&s&&s.q?lostBar(s.free?'Téléphone de l\'hôte déconnecté. Il peut rescanner ce QR code ou rouvrir sa page : la partie est conservée.':undefined)+(s.phase=='rules'?(s.free?tvRulesFree(s):tvRules()):s.free?tvFree(s):tvGame(s)):scr=='end'&&s?lostBar(s.free?'Scannez ce QR code avec le téléphone de l\'hôte puis touchez « Nouvelle partie ».':'Scannez ce QR code avec le téléphone du Maître du Jeu puis touchez « Nouvelle partie ».')+endHTML(s,false):tvWait();
-    if(scr=='game'||scr=='end')h=`<div class="tvmain">${h}</div>`+tvResetHTML;
+    if(scr=='game'||scr=='end')h=`<div class="tvmain">${h}</div>`+tvResetHTML();
   }
   else if(HOSTL){const s=pub();h=scr=='game'&&s&&s.q?fGame(s):scr=='end'&&s?endHTML(s,true):renderSetup()}
   else if(scr=='conn')h=`<div class="card"><h3>${TEAM?'Connexion à la partie…':'Connexion à l\'écran principal…'}</h3><p class="st">Serveur de messages : ${pOk?'✓ joint':'en cours…'}</p><p class="st">${TEAM?'Partie':'Écran TV'} : ${cOk?'✓ trouvé':'en recherche…'}</p>${Date.now()-t0>12000?connHelp():''}${diagHTML()}<p class="foot sub"><a href="?forget">Scanner un autre QR code</a> · <a href="?tv">Utiliser cet appareil comme écran TV</a></p></div>`;
@@ -276,10 +287,13 @@ function render(){
      Sinon, le champ qui avait le focus le retrouve, avec son texte et la position du curseur. */
   if(h!==lastH){
     const f=document.activeElement,fid=f&&f.id&&f.tagName=='INPUT'?f.id:'',sv=fid?[f.value,f.selectionStart,f.selectionEnd]:null;
+    if(!tvFocus&&f&&f.id&&f.id.startsWith('tvrst'))tvFocus=f.id;
     a.innerHTML=h;lastH=h;
     const e=fid&&document.getElementById(fid);
     if(e){e.value=sv[0];e.focus();try{e.setSelectionRange(sv[1],sv[2])}catch(x){}}
   }
+  /* Bouton de la TV sélectionné à la télécommande : il garde la sélection quand l'écran est redessiné. */
+  if(tvFocus){const b=document.getElementById(tvFocus);tvFocus='';if(b)b.focus()}
   if(TV)teamOverlay();
   /* Téléphone d'une partie sans Maître du Jeu : signal au début de chaque question. */
   const ps=ENGINE?(HOSTL&&scr=='game'?pub():null):scr=='game'?st:null;
