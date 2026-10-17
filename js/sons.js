@@ -54,8 +54,11 @@ function noise(t0,d,v,ftype,f0,f1){
   s.connect(fl);fl.connect(g);g.connect(VOL);s.start(t);s.stop(t+d+.05);
 }
 const SONS={
-  /* Annonce « Au tour de… / Question x » : souffle qui monte, puis accord bref */
-  whoosh(){noise(0,.5,.5,'bandpass',300,3500);[523,659,784].forEach(f=>note('triangle',f,.38,.45,.18))},
+  /* Annonce « Au tour de… / Question x » : petit jingle de xylophone « pa-pa-pam ! » */
+  whoosh(){
+    const X=(f,t,d)=>{note('sine',f,t,d,.45);note('sine',f*4,t,.08,.06);note('triangle',f*2,t,d*.5,.05)};
+    X(523,0,.25);X(659,.13,.25);X(784,.26,.7);X(1047,.26,.7);
+  },
   /* 5 dernières secondes : un tic, un peu plus aigu à chaque seconde (n = secondes restantes) */
   tick(n){if(TMR)return;if(n==5&&(TMR=play('timer',0,.08))){TMR.t0=AC.currentTime;return}note('sine',1500-n*100,0,.07,.5);note('square',(1500-n*100)/2,0,.03,.08)},
   /* Temps écoulé */
