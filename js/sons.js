@@ -5,7 +5,7 @@
 let AC=null,VOL=null,FVOL=null;
 /* Enregistrements (MP3 libres de droits, dossier sons/) : s'ils sont présents, ils remplacent le son synthétisé correspondant.
    Un fichier absent ou illisible laisse simplement le son synthétisé. */
-const FICHIERS={good:'sons/bonne-reponse.mp3',bad:'sons/mauvaise-reponse.mp3',roll:'sons/roulement.mp3',fanfare:'sons/fanfare.mp3',timer:'sons/compte-a-rebours.mp3'},BUF={};
+const FICHIERS={good:'sons/bonne-reponse.mp3',bad:'sons/mauvaise-reponse.mp3',roll:'sons/roulement.mp3',fanfare:'sons/fanfare.mp3',whoosh:'sons/whoosh.mp3',timer:'sons/compte-a-rebours.mp3'},BUF={};
 function sndLoad(){
   Object.keys(FICHIERS).forEach(k=>fetch(FICHIERS[k]).then(r=>r.ok?r.arrayBuffer():null).then(a=>{if(a)AC.decodeAudioData(a,b=>{BUF[k]=b},()=>{})}).catch(()=>{}));
 }
@@ -54,8 +54,9 @@ function noise(t0,d,v,ftype,f0,f1){
   s.connect(fl);fl.connect(g);g.connect(VOL);s.start(t);s.stop(t+d+.05);
 }
 const SONS={
-  /* Annonce « Au tour de… / Question x » : petit jingle de xylophone « pa-pa-pam ! » */
+  /* Annonce « Au tour de… / Question x » : souffle enregistré, calé sur le flip de l'écran (sinon petit jingle de xylophone) */
   whoosh(){
+    if(play('whoosh'))return;
     const X=(f,t,d)=>{note('sine',f,t,d,.45);note('sine',f*4,t,.08,.06);note('triangle',f*2,t,d*.5,.05)};
     X(523,0,.25);X(659,.13,.25);X(784,.26,.7);X(1047,.26,.7);
   },
