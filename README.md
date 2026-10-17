@@ -39,7 +39,7 @@ Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'
 
 ## Partie sans Maître du Jeu
 
-Sur la TV, choisis **Sans Maître du Jeu** avant de scanner le QR code (ou, sur l'écran de configuration du téléphone, choisis **Sans** Maître du Jeu, puis **Avec la TV** ou **Sans TV**). Le téléphone qui configure est l'hôte : il joue aussi pour son équipe. Les autres équipes (8 au total au maximum) scannent le QR code affiché sur ce téléphone et entrent le nom de leur équipe.
+Sur la TV, choisis **Sans Maître du Jeu** avant de scanner le QR code (ou, sur l'écran de configuration du téléphone, choisis **Sans** Maître du Jeu, puis **Avec la TV** ou **Sans TV**). Le téléphone qui configure est l'hôte : il joue aussi pour son équipe. Les autres équipes (8 au total au maximum) scannent le QR code affiché sur ce téléphone et entrent le nom de leur équipe. Avec la TV, dès que l'hôte est connecté, la TV affiche à son tour le QR code des équipes : chacune peut la scanner directement.
 
 - Toutes les équipes répondent en même temps à la même question, chacune sur son téléphone.
 - Réponse tapée directement : 5 points (les petites fautes d'orthographe sont acceptées). Quand la réponse est une personne, le nom de famille suffit (« Hugo » pour « Victor Hugo », « de Gaulle » ou « Gaulle » pour « Charles de Gaulle »), sauf pour un souverain numéroté (« Louis XIV ») ou désigné par un surnom (« Charles le Chauve »). Avec les 4 propositions : 3 points. Après un 50/50 : 1 point. Chaque équipe choisit son aide sans que les autres le voient, et une réponse envoyée est définitive.

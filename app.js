@@ -205,14 +205,15 @@ function tvWait(){
   <div class="tvpick"><button class="btn" onclick="tvFm=false;push();render()"><b>Avec Maître du Jeu</b><i>Il lit les questions et valide les réponses sur son téléphone</i></button>
   <button class="btn" onclick="tvPickFree()"><b>Sans Maître du Jeu</b><i>Chaque équipe répond sur son téléphone, les questions s'affichent ici</i></button></div>
   <p class="foot sub"><a href="?host">Pas de TV ? Jouer uniquement sur les téléphones</a></p></div>`;
-  const u=qrURL(8);
+  /* Sans Maître du Jeu, une fois l'hôte connecté : la TV affiche le QR code des équipes, qui la scannent directement. */
+  const teams=tvFm&&conn,u=qrURL(8,teams?teamUrl():joinUrl);
   const qr=u?`<div class="qr"><img alt="QR code pour rejoindre la partie" src="${u}"></div>`:'';
   const tl=lobbyNames().length?`<p class="st">Équipes inscrites : ${lobbyNames().map(esc).join(' · ')}</p>`:'';
   const who=tvFm?'de l\'hôte':'du Maître du Jeu';
   const s=conn?`<p class="st on">✓ Téléphone ${who} connecté · configuration en cours</p>`+tl+diagHTML()
     :`<p class="st sub">En attente du téléphone ${who}…</p>`+diagHTML(`<p class="st sub" style="font-size:.85rem">Serveur de messages : ${tvOk?'✓ joint':'en cours (si cela dure, le réseau le bloque)…'}</p>`);
   return `<div class="tvwait"><h2 class="hero">Quiz <span>Time</span></h2>${qr||`<p class="sub">QR code indisponible. Ouvrez l'adresse ci-dessous sur le téléphone.</p>`}
-  <p style="font-size:1.4rem;margin:0">${tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code, crée son équipe, puis montre son propre QR code aux autres équipes':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(joinUrl)}</p>
+  <p style="font-size:1.4rem;margin:0">${teams?'Équipes : scannez ce QR code avec votre téléphone pour rejoindre la partie':tvFm?'Partie sans Maître du Jeu : l\'hôte scanne ce QR code avec son téléphone, puis crée son équipe':'Scannez ce QR code avec le smartphone du Maître du Jeu'}</p>${s}<p class="url">${esc(teams?teamUrl():joinUrl)}</p>
   ${conn?'':'<p class="foot sub"><a href="#" onclick="tvFm=null;render();return false">Changer de mode</a></p>'}</div>`;
 }
 /* Réinitialisation de la TV, sous le bas de l'écran (il faut défiler pour l'atteindre) : même effet que ?tv,
