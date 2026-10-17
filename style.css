@@ -332,3 +332,7 @@ body.tv .fres+.fact{margin-top:0}
 .fready{text-align:center;color:var(--mut);font-weight:900;margin:1rem 0 0}
 .chip.wait{opacity:.75}
 .chip.wait em{background:var(--panel2);color:var(--lav)}
+/* Accueil TV : choix avec ou sans Maître du Jeu */
+.tvpick{display:flex;gap:1.4rem;flex-wrap:wrap;justify-content:center;width:min(100%,56rem);margin-top:1rem}
+.tvpick button{--c:var(--acc);--t:var(--dark);flex:1;min-width:16rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.6rem 1.4rem;line-height:1.2}
+.tvpick b{font-weight:400;font-size:2rem}.tvpick i{font-style:normal;font-family:"Nunito",sans-serif;font-weight:800;font-size:1rem;opacity:.85}
