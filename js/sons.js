@@ -60,6 +60,8 @@ const SONS={
     const X=(f,t,d)=>{note('sine',f,t,d,.45);note('sine',f*4,t,.08,.06);note('triangle',f*2,t,d*.5,.05)};
     X(523,0,.25);X(659,.13,.25);X(784,.26,.7);X(1047,.26,.7);
   },
+  /* Propositions en cascade : un tic léger par proposition, calé sur leur arrivée (toutes les 0,06 s), un peu plus aigu à chaque fois */
+  cascade(n){for(let i=0;i<n;i++){note('sine',880*Math.pow(1.19,i),i*.06+.03,.035,.22);note('triangle',1760*Math.pow(1.19,i),i*.06+.03,.015,.05)}},
   /* 5 dernières secondes : un tic, un peu plus aigu à chaque seconde (n = secondes restantes) */
   tick(n){if(TMR)return;if(n==5&&(TMR=play('timer',0,.08))){TMR.t0=AC.currentTime;return}note('sine',1500-n*100,0,.07,.5);note('square',(1500-n*100)/2,0,.03,.08)},
   /* Temps écoulé */

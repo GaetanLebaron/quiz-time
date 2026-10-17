@@ -73,7 +73,7 @@ function animIn(){
     if(s.phase!='r'){if(document.querySelector('.ovl'))qc.style.setProperty('--ad',OVL_MS*.8/1000+'s');qc.classList.add('in')}
   }
   const op=document.querySelector('.opts:not(.one)');
-  if(op&&key!==aniO){aniO=key;if(s.phase!='r')op.classList.add('in')}
+  if(op&&key!==aniO){aniO=key;if(s.phase!='r'){op.classList.add('in');snd('cascade',op.children.length)}}
   /* Révélation : carillon si l'équipe (ou au moins une équipe, sans Maître du Jeu) marque, « pouet » sinon */
   if(s.phase=='r'&&key!==aniR){aniR=key;snd(s.free?Object.values(s.an).some(a=>a.pts>0)?'good':'bad':s.pts>0?'good':'bad')}
   scores(s);

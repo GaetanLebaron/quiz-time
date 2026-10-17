@@ -257,7 +257,7 @@ body.tv .end .score .pt{font-size:2.3rem;line-height:1.1}
 
 /* Animation de changement d'équipe (écran TV) : même fond que l'application (--motif),
    opaque dès la première image pour que la question derrière ne se voie pas ; seul le fondu de sortie la révèle. */
-/* L'écran d'annonce arrive en pivotant comme une carte (en même temps que le souffle), puis repart en pivotant pour dévoiler la question */
+/* L'écran d'annonce arrive en pivotant comme une carte (en même temps que le souffle), puis s'efface en fondu pour dévoiler la question */
 .ovl{position:fixed;inset:0;z-index:50;display:grid;place-items:center;text-align:center;pointer-events:none;animation:ovlflip 2s forwards;background:var(--motif);backface-visibility:hidden}
 .ovl-in{display:grid;gap:1.2rem;justify-items:center}
 .ovl-in span{font-family:var(--disp);color:var(--lav);font-size:clamp(1.2rem,2.6vw,2.2rem);text-transform:uppercase;letter-spacing:.05em}
@@ -266,7 +266,7 @@ body.tv .end .score .pt{font-size:2.3rem;line-height:1.1}
 background:var(--c);color:var(--dark);border:.2rem solid var(--edge);border-radius:.9rem;padding:.3rem 1.1rem;box-shadow:0 .3rem 0 var(--drop);transform:rotate(-2deg)}
 .ovl-in em{font-style:normal;font-family:var(--disp);font-size:clamp(1.2rem,2.6vw,2rem);text-transform:uppercase;background:var(--green);color:var(--dark);border:.2rem solid var(--edge);border-radius:.8rem;padding:.25rem 1rem}
 @keyframes ovlflip{0%{transform:perspective(1600px) rotateY(-90deg);animation-timing-function:cubic-bezier(.2,1.25,.4,1)}
-25%,78%{transform:perspective(1600px) rotateY(0);animation-timing-function:ease-in}100%{transform:perspective(1600px) rotateY(90deg)}}
+25%{transform:perspective(1600px) rotateY(0)}82%{opacity:1}100%{transform:perspective(1600px) rotateY(0);opacity:0}}
 @keyframes ovl{0%,82%{opacity:1}100%{opacity:0}}   /* mouvement réduit : simple fondu */
 
 /* Règles du jeu (écran TV, avant la première question) : tout tient sur un écran */
@@ -301,7 +301,7 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
    Remplissage « backwards » : l'élément est caché pendant le délai, puis retrouve son état normal (bonne réponse inclinée, etc.). */
 .qcard.in{animation:qin .55s cubic-bezier(.2,1.3,.4,1) backwards;animation-delay:var(--ad,0s)}
 .opts.in>.opt{animation:oin .45s cubic-bezier(.2,1.5,.4,1) backwards}
-.opts.in>.opt:nth-child(2){animation-delay:.09s}.opts.in>.opt:nth-child(3){animation-delay:.18s}.opts.in>.opt:nth-child(4){animation-delay:.27s}
+.opts.in>.opt:nth-child(2){animation-delay:.06s}.opts.in>.opt:nth-child(3){animation-delay:.12s}.opts.in>.opt:nth-child(4){animation-delay:.18s}
 @keyframes qin{from{opacity:0;transform:translateY(2rem) scale(.96)}to{opacity:1;transform:none}}
 @keyframes oin{from{opacity:0;transform:translateY(1.2rem) scale(.9)}to{opacity:1;transform:none}}
 /* Compte à rebours : battement à chaque seconde pendant les 5 dernières */
