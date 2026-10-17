@@ -10,6 +10,7 @@ Application de quiz pour un Maître du Jeu : un **écran TV** affiche les questi
 | `css/style.css` | Apparence |
 | `js/base.js` | Réglages, rôle de l'appareil (TV, télécommande, équipe, hôte sans TV) et fonctions communes |
 | `js/moteur.js` | Déroulement de la partie avec Maître du Jeu |
+| `js/sons.js` | Sons de la TV, créés dans le navigateur (aucun fichier audio) |
 | `js/liaison.js` | Échange de messages entre la TV et les téléphones (ntfy.sh, Nostr, liaison directe) |
 | `js/libre.js` | Partie sans Maître du Jeu : chaque équipe joue sur son téléphone |
 | `js/app.js` | Écrans et démarrage de l'application |
@@ -35,6 +36,8 @@ Application de quiz pour un Maître du Jeu : un **écran TV** affiche les questi
 4. Pour chaque question, l'équipe peut répondre directement (5 points). Sinon, affiche les 4 propositions : touche sur le téléphone la proposition donnée par l'équipe, puis **Valider** (3 points si elle est juste, 1 point après un 50/50). La TV montre la bonne réponse et, si elle est fausse, la proposition choisie.
 
 Le téléphone mémorise la connexion : une fois la page ajoutée à l'écran d'accueil (« Ajouter à l'écran d'accueil » dans le menu du navigateur), l'icône rouvre directement la télécommande. Pour utiliser un appareil comme écran TV à la place, ouvre `adresse-du-site/?tv`, ou touche le lien « Utiliser cet appareil comme écran TV » en bas de l'écran de configuration.
+
+La TV joue des sons (annonce de l'équipe ou de la question, tic-tac des 5 dernières secondes, buzzer, bonne ou mauvaise réponse, roulement de tambour et fanfare au podium). Les téléphones restent silencieux. Décoche **Sons sur la TV** sur l'écran de configuration pour les couper. Le navigateur n'autorise le son qu'après un appui sur une touche : après un rechargement de la TV en cours de partie, elle reste muette jusqu'au prochain appui sur la télécommande.
 
 À la fin d'une partie, la TV garde le classement affiché (même après un rechargement) jusqu'à ce que le Maître du Jeu touche « Nouvelle partie » sur son téléphone. Si le téléphone n'est plus connecté, la TV affiche un QR code au-dessus du classement : il suffit de le scanner puis de toucher « Nouvelle partie ». Ouvrir `adresse-du-site/?tv` sur la TV efface aussi la partie en cours et revient à l'écran d'accueil. Dans l'application installée, où l'adresse ne se modifie pas, fais défiler l'écran de la TV jusqu'en bas : le bouton **Réinitialiser l'écran TV** fait la même chose (la partie reste dans les parties enregistrées).
 

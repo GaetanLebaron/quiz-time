@@ -65,7 +65,7 @@ function fStart(c,pid){
   const rounds=Math.max(cr?lv.length:1,Math.min(30,+c.rounds||10)),level=cr?lv[0]:Math.max(1,Math.min(LV.length,+c.level||2));
   const tt=Math.max(5,Math.min(300,Math.round(+c.timer||30)));   /* le timer décide de la fin de chaque question : toujours actif */
   const bag=[];while(bag.length<rounds)bag.push(...shuf(THEMES.map((_,i)=>i)));
-  S={gid:Date.now(),date:Date.now(),free:true,host:pid,teams,rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set()};
+  S={gid:Date.now(),date:Date.now(),free:true,host:pid,teams,rounds,level,tt,tEnd:0,lvl:cr?lvPlan(lv,rounds):null,themes:bag.slice(0,rounds),round:0,ti:0,used:new Set(),snd:c.snd!==false};
   lobby=[];fq();S.phase='rules';scr='game';
 }
 /* Nouvelle question : mêmes propositions et même 50/50 pour toutes les équipes. ans : réponse de chaque équipe, rdy : équipes prêtes. */

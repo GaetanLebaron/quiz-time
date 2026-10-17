@@ -8,7 +8,7 @@ function go(){
   const cr=cfg.mode=='cresc';
   if(cr&&cfg.levels.length<2){alert('Choisissez au moins deux niveaux pour le mode Crescendo.');return}
   if(cr&&nRounds()<cfg.levels.length){alert('Le mode Crescendo demande au moins un tour par niveau : '+plural(cfg.levels.length,'tour')+' minimum.');return}
-  const c={rounds:nRounds(),mode:cr?'cresc':'std',level:cfg.level,levels:cfg.levels};
+  const c={rounds:nRounds(),mode:cr?'cresc':'std',level:cfg.level,levels:cfg.levels,snd:cfg.tvSnd};
   act({t:'start',cfg:free?{...c,free:true,me:cfg.me.trim(),timer:cfg.timerFree}:{...c,teams:cfg.teams,timer:cfg.timerOn?cfg.timerSec:0}});
 }
 
@@ -26,7 +26,8 @@ function tick(){
   else{document.getElementById('tmrv').textContent=ms<=0?'Temps écoulé !':sec+' s';document.getElementById('tmrb').style.width=pc+'%'}
   box.classList.toggle('low',ms>0&&sec<=5);box.classList.toggle('zero',ms<=0);
   /* 5 dernières secondes : le chiffre bat à chaque seconde (classe retirée puis remise pour rejouer l'animation) */
-  if(ms>0&&sec<=5&&sec!=beatSec){beatSec=sec;const v=document.getElementById('tmrv');v.classList.remove('beat');void v.offsetWidth;v.classList.add('beat')}
+  if(ms>0&&sec<=5&&sec!=beatSec){beatSec=sec;const v=document.getElementById('tmrv');v.classList.remove('beat');void v.offsetWidth;v.classList.add('beat');snd('tick',sec)}
+  else if(ms<=0&&beatSec>0){beatSec=-1;snd('buzz')}   /* temps écoulé : buzzer, une seule fois */
   else if(sec>5)beatSec=0;
 }
 let beatSec=0;
@@ -45,13 +46,13 @@ function teamOverlay(){
     const L=curLv(),up=S.lvl&&(S.round==0||S.lvl[S.round-1]!=L);
     const d=document.createElement('div');d.className='ovl';
     d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Question ${S.round+1} / ${S.rounds}</span><b>À vos téléphones !</b><i style="--c:${th.c}">${thIco(S.themes[S.round])}${esc(th.n)}</i></div>`;
-    document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);return;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);snd('whoosh');return;
   }
   /* Crescendo : au début de la partie et à chaque passage au niveau supérieur, l'animation annonce le niveau. */
   const L=curLv(),up=S.lvl&&S.ti==0&&(S.round==0||S.lvl[S.round-1]!=L);
   const d=document.createElement('div');d.className='ovl';
   d.innerHTML=`<div class="ovl-in">${up?`<em>${S.round?'⬆ Niveau supérieur':'Crescendo'} · ${L} ${esc(LV[L-1])}</em>`:''}<span>Au tour de</span><b>${esc(S.teams[S.ti].n)}</b><i style="--c:${th.c}">${thIco(S.themes[S.round])}${esc(th.n)}</i></div>`;
-  document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);
+  document.body.appendChild(d);setTimeout(()=>d.remove(),OVL_MS+100);snd('whoosh');
 }
 
 /* ---------- Animations : entrée de la question, scores qui défilent, podium final ----------
@@ -59,7 +60,7 @@ function teamOverlay(){
    de sa question (ou de la fin de partie), grâce à une clé, comme l'animation de changement d'équipe.
    Uniquement transform et opacity, pour rester fluide sur les vieilles TV et dans l'appli Android TV. */
 const CALME=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
-let aniQ='',aniO='',aniE='',scVu={},scGid=null;
+let aniQ='',aniO='',aniE='',aniR='',scVu={},scGid=null;
 function animIn(){
   const s=ENGINE?pub():st;if(!s)return;
   const end=document.querySelector('.end');
@@ -73,6 +74,8 @@ function animIn(){
   }
   const op=document.querySelector('.opts:not(.one)');
   if(op&&key!==aniO){aniO=key;if(s.phase!='r')op.classList.add('in')}
+  /* Révélation : carillon si l'équipe (ou au moins une équipe, sans Maître du Jeu) marque, « pouet » sinon */
+  if(s.phase=='r'&&key!==aniR){aniR=key;snd(s.free?Object.values(s.an).some(a=>a.pts>0)?'good':'bad':s.pts>0?'good':'bad')}
   scores(s);
 }
 /* Bandeau des équipes : le score défile de l'ancienne à la nouvelle valeur, et les points gagnés s'envolent au-dessus. */
@@ -99,6 +102,7 @@ function podium(end){
   li.forEach((l,k)=>l.style.animationDelay=(n-1-k)*G+'s');
   const wd=n*G+.2;end.style.setProperty('--wd',wd+'s');end.classList.add('in');
   if(!CALME)setTimeout(confetti,wd*1000+300);
+  snd('podium',wd);
 }
 function confetti(){
   const d=document.createElement('div'),C=['var(--acc)','var(--green)','var(--red)','var(--purple)','var(--blue)','#fff'];d.className='confetti';
@@ -169,6 +173,9 @@ function renderSetup(){
     <label class="chk"><input type="checkbox" ${cfg.timerOn?'checked':''} onchange="cfg.timerOn=this.checked;saveCfg();render()"><span>Compte à rebours pour chaque question</span></label>
     ${cfg.timerOn?`<div class="row" style="align-items:center"><input type="number" min="5" max="300" value="${cfg.timerSec}" aria-label="Durée en secondes" oninput="cfg.timerSec=Math.max(5,Math.min(300,+this.value||30));saveCfg()"><span class="sub">secondes par question (5 à 300)</span></div>`:''}
   </section>`}
+  ${!HOSTL||hostTv?`<section class="card"><h3>Sons</h3>
+    <label class="chk"><input type="checkbox" ${cfg.tvSnd?'checked':''} onchange="cfg.tvSnd=this.checked;saveCfg()"><span>Sons sur la TV (annonces, compte à rebours, réponses, podium)</span></label>
+  </section>`:''}
   <button class="btn pink big" onclick="go()">Lancer la partie</button>${savedHTML()}
   <p class="foot sub"><span id="lnk">${esc(lnkTxt())}</span>${HOSTL?'':'<br><a href="?tv">Utiliser cet appareil comme écran TV</a>'}</p></div>`;
 }
