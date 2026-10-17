@@ -308,6 +308,12 @@ body.tv .rgrid .card{padding:.85rem 1.2rem;border-radius:1rem}
 .fgame .rcard p{font-size:1.05rem}
 .fgame .burst{width:4.4rem;height:4.4rem}
 .fgame .burst b{font-size:1.6rem}
+/* « Le saviez-vous ? » : même carte blanche avec ampoule que sur la TV, à la taille du téléphone */
+.fgame .fact{gap:14px;padding:14px 16px;border-width:3px;border-radius:18px;box-shadow:0 6px 0 var(--drop)}
+.fgame .fact h3{font-size:1.2rem;margin-bottom:4px}
+.fgame .fact p{font-size:1.05rem}
+.fgame .bulb{width:3.6rem;height:3.6rem;border-width:3px;border-radius:14px}
+.fgame .bulb svg{width:2rem;height:2rem}
 /* Réponse révélée sur le téléphone : l'étiquette passe sur deux lignes pour laisser la place à la réponse */
 .fgame .opts.one .ot{overflow-wrap:break-word;hyphens:auto}
 .fgame .opts.one .otag{white-space:normal;width:min-content;text-align:center;line-height:1.1}

@@ -261,7 +261,7 @@ function fGame(s){
       <div><h3>${ok?'Bien joué !':'Dommage !'}</h3><p>${ok?'Votre équipe empoche '+plural(r.pts,'point'):r&&r.done?'Pas de point cette fois':'Temps écoulé : pas de point cette fois'}</p></div></div>`:'';
     body=`<section class="card qcard"><h2 class="q">${escQ(q.q)}</h2><div class="opts one">${bad}${tile(q.a,0,'ok','Bonne réponse')}</div>
       ${card}
-      ${q.f?`<div class="anec"><b>Le saviez-vous ?</b><p>${esc(q.f)}</p></div>`:''}</section>
+      ${q.f?`<div class="fact"><span class="bulb">${ICO.bulb}</span><div><h3>Le saviez-vous ?</h3><p>${esc(q.f)}</p></div></div>`:''}</section>
       <div class="acts">${ready?`<div class="anec"><b>Prêt ✓</b><p>${fReady(s)}</p></div>`:B('pink',s.last?'Prêt · voir le classement':'Prêt',"cmd('rdy')")+`<p class="sub hint">${fReady(s)}</p>`}
       ${host?B('mut',s.last?'Voir le classement final sans attendre':'Question suivante sans attendre',"cmd('next')"):''}</div>
       <section class="card"><h3>Réponses des équipes</h3>${fRes(s,false)}</section>`;
