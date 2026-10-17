@@ -1,24 +1,35 @@
-/* Sons de la TV, synthétisés dans le navigateur (Web Audio) : aucun fichier à charger, fonctionne hors ligne.
+/* Sons de la TV (Web Audio) : enregistrements du dossier sons/ quand ils existent, sinon sons synthétisés dans le navigateur.
    Uniquement sur l'écran TV ; les téléphones restent silencieux. La case « Sons sur la TV » de la configuration
    les coupe (S.snd). Un navigateur n'autorise le son qu'après une action sur la page : le premier appui sur
    une touche de la télécommande (ou un clic) débloque le son. */
-let AC=null,VOL=null;
+let AC=null,VOL=null,FVOL=null;
 /* Enregistrements (MP3 libres de droits, dossier sons/) : s'ils sont présents, ils remplacent le son synthétisé correspondant.
    Un fichier absent ou illisible laisse simplement le son synthétisé. */
-const FICHIERS={good:'sons/bonne-reponse.mp3',bad:'sons/mauvaise-reponse.mp3',roll:'sons/roulement.mp3',fanfare:'sons/fanfare.mp3'},BUF={};
+const FICHIERS={good:'sons/bonne-reponse.mp3',bad:'sons/mauvaise-reponse.mp3',roll:'sons/roulement.mp3',fanfare:'sons/fanfare.mp3',timer:'sons/compte-a-rebours.mp3'},BUF={};
 function sndLoad(){
   Object.keys(FICHIERS).forEach(k=>fetch(FICHIERS[k]).then(r=>r.ok?r.arrayBuffer():null).then(a=>{if(a)AC.decodeAudioData(a,b=>{BUF[k]=b},()=>{})}).catch(()=>{}));
 }
-/* Lecture d'un enregistrement ; d : durée maximale (le roulement est répété en boucle jusque-là). Renvoie false s'il n'est pas chargé. */
-function play(k,t0,d){
-  const b=BUF[k];if(!b)return false;
-  const s=AC.createBufferSource(),t=AC.currentTime+(t0||0);s.buffer=b;s.connect(VOL);
-  if(d){s.loop=true;s.start(t);s.stop(t+d)}else s.start(t);
+/* Lecture d'un enregistrement à t0 secondes, depuis la position off. Renvoie la source (pour l'arrêter), ou null s'il n'est pas chargé. */
+function play(k,t0,off){
+  const b=BUF[k];if(!b)return null;
+  const s=AC.createBufferSource();s.buffer=b;s.connect(FVOL);s.start(AC.currentTime+(t0||0),off||0);
+  return s;
+}
+/* Roulement de tambour de d secondes : le roulement (sans le coup final) tourne en boucle, puis le coup final tombe juste avant la fanfare. */
+const ROLL_FIN=1.1;
+function roll(d){
+  const b=BUF.roll;if(!b)return false;
+  const fin=Math.max(0,d-(b.duration-ROLL_FIN)+.25),s=AC.createBufferSource(),t=AC.currentTime;
+  s.buffer=b;s.loop=true;s.loopStart=.05;s.loopEnd=ROLL_FIN;s.connect(FVOL);s.start(t);s.stop(t+fin);
+  play('roll',fin,ROLL_FIN);
   return true;
 }
+/* Compte à rebours enregistré : 5 bips (un par seconde) puis la sonnerie de fin. Arrêté si la question se termine avant. */
+let TMR=null;
+function sndTimerStop(){if(TMR){if(AC.currentTime-TMR.t0<4.9)try{TMR.stop()}catch(e){}TMR=null}}   /* la sonnerie de fin, elle, va jusqu'au bout */
 function sndCtx(){
   try{
-    if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();VOL=AC.createGain();VOL.gain.value=.35;VOL.connect(AC.destination);sndLoad()}
+    if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();VOL=AC.createGain();VOL.gain.value=.35;VOL.connect(AC.destination);FVOL=AC.createGain();FVOL.gain.value=.6;FVOL.connect(AC.destination);sndLoad()}
     if(AC.state=='suspended')AC.resume();
   }catch(e){return null}
   return AC;
@@ -46,16 +57,16 @@ const SONS={
   /* Annonce « Au tour de… / Question x » : souffle qui monte, puis accord bref */
   whoosh(){noise(0,.5,.5,'bandpass',300,3500);[523,659,784].forEach(f=>note('triangle',f,.38,.45,.18))},
   /* 5 dernières secondes : un tic, un peu plus aigu à chaque seconde (n = secondes restantes) */
-  tick(n){note('sine',1500-n*100,0,.07,.5);note('square',(1500-n*100)/2,0,.03,.08)},
+  tick(n){if(TMR)return;if(n==5&&(TMR=play('timer',0,.08))){TMR.t0=AC.currentTime;return}note('sine',1500-n*100,0,.07,.5);note('square',(1500-n*100)/2,0,.03,.08)},
   /* Temps écoulé */
-  buzz(){note('sawtooth',150,0,.7,.35);note('sawtooth',155,0,.7,.25)},
+  buzz(){if(TMR){TMR=null;return}note('sawtooth',150,0,.7,.35);note('sawtooth',155,0,.7,.25)},
   /* Bonne réponse : carillon montant */
   good(){if(play('good'))return;[784,988,1175,1568].forEach((f,i)=>{note('sine',f,i*.09,.8,.3);note('triangle',f*2,i*.09,.3,.06)})},
   /* Mauvaise réponse : « pouet pouet » descendant, comme un trombone */
   bad(){if(play('bad'))return;note('square',[330,300],0,.28,.18);note('square',[260,175],.32,.55,.18)},
   /* Podium : roulement de tambour pendant d secondes, puis cymbale et fanfare */
   podium(d){
-    if(!play('roll',0,d))for(let t=0;t<d;t+=.055)noise(t,.05,.08+.22*t/d,'bandpass',1800);
+    if(!roll(d))for(let t=0;t<d;t+=.055)noise(t,.05,.08+.22*t/d,'bandpass',1800);
     if(play('fanfare',d))return;
     noise(d,1.4,.4,'highpass',6000);
     [[523,0,.14],[523,.16,.14],[523,.32,.14],[659,.48,.5],[587,.98,.14],[659,1.14,.14],[784,1.3,.9]]

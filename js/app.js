@@ -17,7 +17,7 @@ const tmrHTML=s=>s&&s.tt&&s.phase!='r'?`<div class="tmr" id="tmr"><div class="tm
 /* Écran TV : compte à rebours circulaire, à droite de la question */
 const tmrRing=s=>s.tt&&s.phase!='r'?`<div class="ring" id="tmr"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18.5" pathLength="100"/><circle id="tmrc" cx="22" cy="22" r="18.5" pathLength="100"/></svg><b id="tmrv">${s.tt}</b></div>`:'';
 function tick(){
-  const box=document.getElementById('tmr');if(!box)return;
+  const box=document.getElementById('tmr');if(!box){if(TV)sndTimerStop();return}
   const s=ENGINE?pub():st;if(!s||!s.tt)return;
   const ms=ENGINE?s.tl:Math.max(0,s.tl-(Date.now()-recvAt));
   const sec=Math.ceil(ms/1000);
